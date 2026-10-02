@@ -1,38 +1,28 @@
+name: socialmesh-dev
+
 services:
     mailpit:
         image: axllent/mailpit:latest
-        pull_policy: always
-        container_name: shoutrrr-mail
+        pull_policy: missing
+        container_name: socialmesh-dev-mail
         restart: unless-stopped
         ports:
             - "${FORWARD_MAILPIT_PORT:-1025}:1025"
             - "${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025"
         networks:
-            - shoutrrr
+            - dev
 
     app:
-        image: shoutrrr:dev
+        image: socialmesh:local
         pull_policy: never
-        build:
-            context: .
-            dockerfile: Dockerfile
-            args:
-                USER_ID: "${USERID:-1000}"
-                GROUP_ID: "${GROUPID:-1000}"
-                SERVERSIDEUP_PHP_VERSION: "${SERVERSIDEUP_PHP_VERSION:-8.5-frankenphp-trixie}"
-                POSTGRES_VERSION: "${POSTGRES_VERSION:-17}"
-                AUTORUN_ENABLED: "${AUTORUN_ENABLED:-true}"
-                AUTORUN_LARAVEL_CONFIG_CACHE: "false"
-                AUTORUN_LARAVEL_EVENT_CACHE: "false"
-                AUTORUN_LARAVEL_ROUTE_CACHE: "false"
-                AUTORUN_LARAVEL_VIEW_CACHE: "false"
-                PHP_OPCACHE_ENABLE: "0"
+        container_name: socialmesh-dev-app
         env_file:
             - .env
         environment:
+            APP_NAME: "${APP_NAME:-SocialMesh}"
             APP_ENV: "${APP_ENV:-local}"
             APP_DEBUG: "${APP_DEBUG:-true}"
-            APP_URL: "${DOCKER_APP_URL:-http://127.0.0.1:8000}"
+            APP_URL: "${DOCKER_APP_URL:-http://localhost:8082}"
             AUTORUN_ENABLED: "false"
             PHP_OPCACHE_ENABLE: "0"
             OCTANE_SERVER: frankenphp
@@ -49,24 +39,28 @@ services:
             MAIL_USERNAME: "${DOCKER_MAIL_USERNAME:-null}"
             MAIL_PASSWORD: "${DOCKER_MAIL_PASSWORD:-null}"
             MAIL_SCHEME: "${DOCKER_MAIL_SCHEME:-null}"
-            MAIL_FROM_ADDRESS: "${DOCKER_MAIL_FROM_ADDRESS:-hello@shoutrrr.local}"
-            MAIL_FROM_NAME: "${DOCKER_MAIL_FROM_NAME:-Shoutrrr}"
+            MAIL_FROM_ADDRESS: "${DOCKER_MAIL_FROM_ADDRESS:-hello@socialmesh.local}"
+            MAIL_FROM_NAME: "${DOCKER_MAIL_FROM_NAME:-SocialMesh}"
             QUEUE_WORKER_ENABLED: "${QUEUE_WORKER_ENABLED:-true}"
             SCHEDULER_ENABLED: "${SCHEDULER_ENABLED:-true}"
             INERTIA_SSR_ENABLED: "${INERTIA_SSR_ENABLED:-false}"
             INERTIA_SSR_URL: "${INERTIA_SSR_URL:-http://127.0.0.1:13714}"
+            DIRECT_MESSAGES_ENABLED: "${DIRECT_MESSAGES_ENABLED:-false}"
         depends_on:
             - mailpit
         ports:
-            - "${APP_PORT:-8000}:8080"
+            - "${APP_PORT:-8082}:8080"
         volumes:
             - .:/var/www/html:cached
+            - vendor:/var/www/html/vendor
+            - storage:/var/www/html/storage
+            - sqlite:/var/www/html/database/sqlite
+            - bootstrap-cache:/var/www/html/bootstrap/cache
         command: >
             /bin/bash -lc "
             composer install --no-interaction &&
             php artisan package:discover --ansi &&
             php artisan migrate --force --no-interaction &&
-            php artisan storage:link --force --no-interaction &&
             php artisan db:seed --class=DefaultUserSeeder --force --no-interaction &&
             exec supervisord -c /etc/supervisor/laravel.conf
             "
@@ -78,22 +72,54 @@ services:
             timeout: 5s
             retries: 10
         networks:
-            - shoutrrr
+            - dev
 
     vite:
-        image: shoutrrr:dev
+        image: socialmesh:local
         pull_policy: never
-        container_name: shoutrrr-vite
+        container_name: socialmesh-dev-vite
+        user: "${USERID:-1000}:${GROUPID:-1000}"
         working_dir: /var/www/html
         entrypoint: []
+        env_file:
+            - .env
         environment:
             VITE_HOST: "${VITE_HOST:-0.0.0.0}"
             VITE_PORT: "${VITE_PORT:-5173}"
             VITE_HMR_HOST: "${VITE_HMR_HOST:-localhost}"
+        depends_on:
+            - app
         ports:
             - "${VITE_PORT:-5173}:${VITE_PORT:-5173}"
+        healthcheck:
+            disable: true
         volumes:
             - .:/var/www/html:cached
-        command: /bin/bash -lc "composer install --no-interaction && bun install && bun run dev -- --host $${VITE_HOST} --port $${VITE_PORT}"
+            - vendor:/var/www/html/vendor
+            - storage:/var/www/html/storage
+            - sqlite:/var/www/html/database/sqlite
+            - bootstrap-cache:/var/www/html/bootstrap/cache
+        command: >
+            /bin/bash -lc "
+            if [ ! -f public/frankenphp-worker.php ]; then cp vendor/laravel/octane/src/Commands/stubs/frankenphp-worker.php public/frankenphp-worker.php; fi &&
+            bun install --frozen-lockfile &&
+            if [ ! -L public/storage ] && [ ! -e public/storage ]; then ln -s ../storage/app/public public/storage; fi &&
+            exec bun run dev -- --host $${VITE_HOST} --port $${VITE_PORT}
+            "
         networks:
-            - shoutrrr
+            - dev
+
+networks:
+    dev:
+        name: socialmesh-dev
+        driver: bridge
+
+volumes:
+    vendor:
+        name: socialmesh-dev-vendor
+    storage:
+        name: socialmesh-dev-storage
+    sqlite:
+        name: socialmesh-dev-sqlite
+    bootstrap-cache:
+        name: socialmesh-dev-bootstrap-cache
