@@ -39,11 +39,6 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from '@/components/ui/sidebar';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { WorkspaceSelector } from '@/components/workspace/workspace-selector';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import {
@@ -58,7 +53,6 @@ import {
     workspaceSettingsNavItems,
     type WorkspaceSettingsNavKey,
 } from '@/lib/navigation/workspace-settings-nav';
-import { appVersion, githubReleaseUrl } from '@/lib/version';
 import { dashboard } from '@/routes';
 import { index as accountsRoute } from '@/routes/accounts';
 import { index as analyticsRoute } from '@/routes/analytics';
@@ -91,9 +85,6 @@ const instanceSettingsIcons: Record<InstanceSettingsNavKey, IconComponent> = {
     admins: Shield,
 };
 
-const versionBadgeClassName =
-    'rounded-full border border-sidebar-border px-1.5 py-0.5 text-[10px] leading-none font-medium text-sidebar-foreground/60 transition-colors hover:border-sidebar-accent-foreground/30 hover:text-sidebar-foreground';
-
 const postsNavItems: NavItem[] = [
     { title: 'Posts', href: postsRoute(), icon: Inbox },
     { title: 'Calendar', href: calendarRoute(), icon: CalendarDays },
@@ -108,15 +99,7 @@ const postsNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
-    const {
-        workspaces,
-        features,
-        instance,
-        shell,
-        updateAvailable,
-        latestVersion,
-        latestReleaseUrl,
-    } = usePage().props;
+    const { workspaces, features, instance, shell } = usePage().props;
     const unreadReplies = shell?.unreadReplies ?? 0;
     const unreadMessages = shell?.unreadMessages ?? 0;
     const { isCurrentOrParentUrl, isCurrentUrl } = useCurrentUrl();
@@ -168,46 +151,6 @@ export function AppSidebar() {
                         >
                             <AppLogo />
                         </SidebarMenuButton>
-                        <span className="relative flex group-data-[collapsible=icon]:hidden">
-                            {(() => {
-                                const badge = (
-                                    <a
-                                        href={
-                                            updateAvailable && latestReleaseUrl
-                                                ? latestReleaseUrl
-                                                : githubReleaseUrl
-                                        }
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className={versionBadgeClassName}
-                                        aria-label={
-                                            updateAvailable
-                                                ? `SocialMesh ${appVersion} — update ${latestVersion ?? ''} available on GitHub`
-                                                : `View SocialMesh ${appVersion} release notes on GitHub`
-                                        }
-                                    >
-                                        {appVersion}
-                                    </a>
-                                );
-
-                                return updateAvailable ? (
-                                    <Tooltip>
-                                        <TooltipTrigger render={badge} />
-                                        <TooltipContent>
-                                            Update available: {latestVersion}
-                                        </TooltipContent>
-                                    </Tooltip>
-                                ) : (
-                                    badge
-                                );
-                            })()}
-                            {updateAvailable && (
-                                <span
-                                    className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-sidebar"
-                                    aria-hidden="true"
-                                />
-                            )}
-                        </span>
                     </SidebarMenuItem>
                 </SidebarMenu>
                 <WorkspaceSelector />

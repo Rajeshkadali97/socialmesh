@@ -2,7 +2,6 @@ import { Deferred, Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef } from 'react';
 
 import Composer from '@/components/compose/composer';
-import { DashboardAura } from '@/components/dashboard/dashboard-aura';
 import { RecentFeed } from '@/components/dashboard/recent-feed';
 import { GettingStartedCard } from '@/components/onboarding/getting-started-card';
 import { WelcomeModal } from '@/components/onboarding/welcome-modal';
@@ -113,15 +112,12 @@ export default function Dashboard({ posts, onboarding, savedMentions }: Props) {
     return (
         <>
             <Head title="Dashboard" />
-            <div className="relative isolate mx-auto w-full max-w-7xl px-4 pt-6 pb-16 sm:px-6">
-                <DashboardAura />
+            <div className="mx-auto w-full max-w-7xl px-4 pt-6 pb-16 sm:px-6">
                 {onboarding && <WelcomeModal welcomed={onboarding.welcomed} />}
                 <h1 className="text-[26px] leading-tight font-semibold tracking-tight">
                     {timeGreeting()},{' '}
-                    {/* Brand-green gradient name. Stops are derived from
-                        --primary but darkened for light mode (the raw token is
-                        too light to read on a white background, and the aura
-                        sits behind it) and brightened for dark mode. */}
+                    {/* Brand gradient name, derived from --primary for both
+                        color schemes while keeping clear contrast. */}
                     <span className="bg-gradient-to-br from-[color-mix(in_oklch,var(--primary)_70%,black)] to-[color-mix(in_oklch,var(--primary)_48%,black)] bg-clip-text text-transparent dark:from-primary dark:to-[color-mix(in_oklch,var(--primary)_65%,white)]">
                         {firstName}
                     </span>

@@ -70,8 +70,8 @@ describe('sidebar page cache policy', () => {
     });
 });
 
-describe('sidebar app version link', () => {
-    it('renders a version badge that opens the current GitHub release', () => {
+describe('sidebar branding controls', () => {
+    it('keeps the upstream release badge out of application navigation', () => {
         const source = readFileSync(
             resolve(
                 process.cwd(),
@@ -80,10 +80,10 @@ describe('sidebar app version link', () => {
             'utf8',
         );
 
-        expect(source).toContain('githubReleaseUrl');
-        expect(source).toContain('appVersion');
-        expect(source).toContain('target="_blank"');
-        expect(source).toContain('rel="noopener noreferrer"');
+        expect(source).not.toContain('githubReleaseUrl');
+        expect(source).not.toContain('appVersion');
+        expect(source).not.toContain('versionBadgeClassName');
+        expect(source).not.toContain('Star on GitHub');
     });
 });
 
@@ -98,31 +98,6 @@ describe('sidebar footer card + update dot', () => {
 
     it('renders the footer card above the user menu', () => {
         expect(source).toContain('<SidebarFooterCard />');
-    });
-
-    it('shows a red update dot on the version badge', () => {
-        expect(source).toContain('updateAvailable');
-        expect(source).toContain('bg-red-500');
-    });
-});
-
-describe('version badge update tooltip', () => {
-    const source = readFileSync(
-        resolve(
-            process.cwd(),
-            'resources/js/components/layout/app-sidebar.tsx',
-        ),
-        'utf8',
-    );
-
-    it('links the badge to the new release when an update is available', () => {
-        expect(source).toContain('latestReleaseUrl');
-    });
-
-    it('names the available version in a tooltip', () => {
-        expect(source).toContain('TooltipContent');
-        expect(source).toContain('Update available');
-        expect(source).toContain('latestVersion');
     });
 });
 

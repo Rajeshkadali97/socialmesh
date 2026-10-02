@@ -26,11 +26,6 @@
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
 
-    /* Drifting blobs + rotating sheen for the decorative dashboard aura. */
-    --animate-aura-a: aura-a 14s ease-in-out infinite;
-    --animate-aura-b: aura-b 18s ease-in-out infinite;
-    --animate-aura-spin: aura-spin 32s linear infinite;
-
     --color-background: var(--background);
     --color-foreground: var(--foreground);
 
@@ -82,8 +77,8 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.841 0.238 128.85);
-    --primary-foreground: oklch(0.405 0.101 131.063);
+    --primary: oklch(0.54 0.13 43.5);
+    --primary-foreground: oklch(0.985 0.008 70);
     --secondary: oklch(0.967 0.001 286.375);
     --secondary-foreground: oklch(0.21 0.006 285.885);
     --muted: oklch(0.97 0 0);
@@ -97,31 +92,18 @@
     --info: oklch(0.55 0.16 255);
     --border: oklch(0.922 0 0);
     --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
+    --ring: var(--primary);
     --chart-1: oklch(0.837 0.128 66.29);
     --chart-2: oklch(0.705 0.213 47.604);
     --chart-3: oklch(0.646 0.222 41.116);
     --chart-4: oklch(0.553 0.195 38.402);
     --chart-5: oklch(0.47 0.157 37.304);
-    /* Emphasis gradient, derived from --primary (Kumo's token-derived treatment):
-       a light-to-brand vertical wash, a 1px inset top highlight and a darker edge.
-
-       The mix percentages are ~2x Kumo's. Kumo is tuned for Cloudflare orange
-       (L=0.68), where +15% white travels 0.048 in lightness. Our lime sits at
-       L=0.84, so an identical +15% travels only 0.024 — half the effect — and
-       reads as flat until hover. Keep these calibrated to the *travel*, not to
-       Kumo's literal numbers, if --primary ever changes.
-
-       Declared only here: .dark redefines --primary on the same element (<html>),
-       so these re-resolve per theme on their own and must NOT be copied into
-       .dark. */
-    --primary-gradient-from: color-mix(in oklch, var(--primary), white 30%);
+    /* Primary surface gradient, derived from --primary and shared by buttons,
+       badges, switches, chat bubbles, and calendar chips. Defined once so it
+       follows the brand token in both color schemes. */
+    --primary-gradient-from: color-mix(in oklch, var(--primary), white 6%);
     --primary-gradient-to: var(--primary);
-    --primary-gradient-highlight: color-mix(
-        in oklch,
-        var(--primary),
-        white 45%
-    );
+    --primary-gradient-highlight: color-mix(in oklch, var(--primary), white 6%);
     --primary-gradient-edge: color-mix(in oklch, var(--primary), black 12%);
     /* Categorical account-line palette — distinct hues assigned in fixed order,
        validated colorblind-safe for the light card surface (dataviz method). */
@@ -136,8 +118,8 @@
     --radius: 0.625rem;
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.648 0.2 131.684);
-    --sidebar-primary-foreground: oklch(0.986 0.031 120.757);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
     --sidebar-accent: oklch(0.97 0 0);
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
@@ -151,8 +133,8 @@
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.205 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.768 0.233 130.85);
-    --primary-foreground: oklch(0.405 0.101 131.063);
+    --primary: oklch(0.76 0.14 52);
+    --primary-foreground: oklch(0.24 0.035 48);
     --secondary: oklch(0.274 0.006 286.033);
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.269 0 0);
@@ -166,7 +148,7 @@
     --info: oklch(0.72 0.14 255);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
+    --ring: var(--primary);
     --chart-1: oklch(0.837 0.128 66.29);
     --chart-2: oklch(0.705 0.213 47.604);
     --chart-3: oklch(0.646 0.222 41.116);
@@ -183,8 +165,8 @@
     --account-8: #e66767;
     --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.768 0.233 130.85);
-    --sidebar-primary-foreground: oklch(0.274 0.072 132.109);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
     --sidebar-accent: oklch(0.269 0 0);
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
@@ -415,49 +397,6 @@
     --radius-2xl: calc(var(--radius) * 1.8);
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
-}
-
-/* Decorative dashboard aura: blobs drift + scale + rotate on slow loops, with a
-   rotating conic sheen behind them. Movement is deliberately large so it reads
-   through the heavy blur. */
-@keyframes aura-a {
-    0%,
-    100% {
-        transform: translate3d(-16%, -12%, 0) scale(1) rotate(0deg);
-    }
-    50% {
-        transform: translate3d(22%, 16%, 0) scale(1.4) rotate(28deg);
-    }
-}
-
-@keyframes aura-b {
-    0%,
-    100% {
-        transform: translate3d(16%, 10%, 0) scale(1.2) rotate(0deg);
-    }
-    50% {
-        transform: translate3d(-20%, -16%, 0) scale(0.85) rotate(-32deg);
-    }
-}
-
-@keyframes aura-spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-/* SVG fractal-noise grain that gives the gradient some tactile texture. */
-.aura-grain {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 160px 160px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .animate-aura-a,
-    .animate-aura-b,
-    .animate-aura-spin {
-        animation: none !important;
-    }
 }
 
 /* Kept-warm popovers (the emoji picker, marked `data-keep-warm`) stay mounted
