@@ -270,17 +270,17 @@ export default function CreateSyncPipelineDialog({
                                                         sourceAccount.platform,
                                                     )}
                                                     , not just ones published
-                                                    through Shoutrrr.
+                                                    through SocialMesh.
                                                 </span>
                                             </Label>
                                         </div>
                                     ) : (
                                         <p className="text-sm text-muted-foreground">
                                             {!sourceAccount.supports_native
-                                                ? `${platformLabel(sourceAccount.platform)} posts only sync when published through Shoutrrr — native posts can't be tracked.`
+                                                ? `${platformLabel(sourceAccount.platform)} posts only sync when published through SocialMesh — native posts can't be tracked.`
                                                 : sourceTracked
                                                   ? 'Native posts from this account are already tracked.'
-                                                  : `Native tracking is full (${maxTracked} accounts). This pipeline will only sync posts published through Shoutrrr until you untrack an account.`}
+                                                  : `Native tracking is full (${maxTracked} accounts). This pipeline will only sync posts published through SocialMesh until you untrack an account.`}
                                         </p>
                                     )}
                                     <input

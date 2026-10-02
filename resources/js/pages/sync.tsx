@@ -122,8 +122,8 @@ export default function SyncPipelines({
                         Sync
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Post once and Shoutrrr reposts it to your other accounts
-                        automatically.
+                        Post once and SocialMesh reposts it to your other
+                        accounts automatically.
                     </p>
                 </header>
 
@@ -238,7 +238,7 @@ export default function SyncPipelines({
                                         {untrackedSource && (
                                             <p className="border-t pt-2.5 text-xs text-muted-foreground">
                                                 Only posts you publish through
-                                                Shoutrrr sync.{' '}
+                                                SocialMesh sync.{' '}
                                                 {canTrack ? (
                                                     <button
                                                         type="button"
@@ -268,7 +268,7 @@ export default function SyncPipelines({
                     <div className="grid gap-1">
                         <div className="flex items-center gap-2">
                             <h2 className="font-medium">
-                                Posts made outside Shoutrrr
+                                Posts made outside SocialMesh
                             </h2>
                             <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
                                 {trackedAccountIds.length}/{maxTracked}
@@ -276,7 +276,7 @@ export default function SyncPipelines({
                         </div>
                         <p className="text-sm text-muted-foreground">
                             Pipelines only see posts you publish through
-                            Shoutrrr. Track an account to also sync — and pull
+                            SocialMesh. Track an account to also sync — and pull
                             in analytics for — posts you make directly on the
                             platform.
                         </p>

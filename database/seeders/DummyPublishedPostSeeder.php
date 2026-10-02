@@ -173,7 +173,7 @@ class DummyPublishedPostSeeder extends Seeder
         $path = 'media/dummy-published-post.png';
 
         if (! Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->put($path, (string) file_get_contents(public_path('shoutrrr.png')));
+            Storage::disk('public')->put($path, (string) file_get_contents(public_path('socialmesh.png')));
         }
 
         return $path;

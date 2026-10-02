@@ -41,7 +41,7 @@ return [
     | Automatic Key Generation
     |--------------------------------------------------------------------------
     |
-    | When no keys are configured above and none exist on disk, Shoutrrr
+    | When no keys are configured above and none exist on disk, SocialMesh
     | generates the RSA keypair automatically the first time an API key is
     | issued. Set this to false to require the keys be provisioned out of band
     | (via `passport:keys` or the env vars above); issuing a key without keys

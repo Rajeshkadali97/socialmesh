@@ -182,8 +182,8 @@ export function AppSidebar() {
                                         className={versionBadgeClassName}
                                         aria-label={
                                             updateAvailable
-                                                ? `Shoutrrr ${appVersion} — update ${latestVersion ?? ''} available on GitHub`
-                                                : `View Shoutrrr ${appVersion} release notes on GitHub`
+                                                ? `SocialMesh ${appVersion} — update ${latestVersion ?? ''} available on GitHub`
+                                                : `View SocialMesh ${appVersion} release notes on GitHub`
                                         }
                                     >
                                         {appVersion}

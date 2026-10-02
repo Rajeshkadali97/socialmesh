@@ -2,7 +2,7 @@
 
 it('publishes generated app icon assets at expected sizes', function (): void {
     $sizes = [
-        'shoutrrr.png' => [512, 512],
+        'socialmesh.png' => [512, 512],
         'favicon-16x16.png' => [16, 16],
         'favicon-32x32.png' => [32, 32],
         'favicon-48x48.png' => [48, 48],
@@ -28,7 +28,7 @@ it('publishes generated app icon assets at expected sizes', function (): void {
 });
 
 it('uses the current source artwork bounds for the app icon', function (): void {
-    $image = imagecreatefrompng(public_path('shoutrrr.png'));
+    $image = imagecreatefrompng(public_path('socialmesh.png'));
     $left = imagesx($image);
     $top = imagesy($image);
     $right = 0;
@@ -49,10 +49,10 @@ it('uses the current source artwork bounds for the app icon', function (): void 
 
     imagedestroy($image);
 
-    expect($left)->toBe(51);
-    expect($right)->toBe(460);
-    expect($top)->toBe(50);
-    expect($bottom)->toBe(462);
+    expect($left)->toBe(9);
+    expect($right)->toBe(506);
+    expect($top)->toBe(20);
+    expect($bottom)->toBe(504);
 });
 
 it('references the generated icons from Laravel HTML entry points', function (): void {
@@ -76,7 +76,7 @@ it('publishes a web app manifest using the generated icons', function (): void {
     $manifest = json_decode(file_get_contents(public_path('site.webmanifest')), true, flags: JSON_THROW_ON_ERROR);
 
     expect($manifest)
-        ->toHaveKey('name', 'shoutrrr')
+        ->toHaveKey('name', 'SocialMesh')
         ->toHaveKey('theme_color', '#101010');
 
     expect(collect($manifest['icons'])->pluck('src')->all())->toEqual([
@@ -91,8 +91,7 @@ it('renders the app logo as an inline svg that inherits the current color', func
     $component = file_get_contents(resource_path('js/components/layout/app-logo-icon.tsx'));
 
     expect($component)
-        ->toContain('<svg')
-        ->toContain('stroke="currentColor"')
+        ->toContain('src="/favicon.svg"')
         ->not->toContain('/shoutrrr.png');
 });
 

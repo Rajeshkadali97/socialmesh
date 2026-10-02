@@ -118,7 +118,7 @@ return [
     |
     */
 
-    'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'Shoutrrr')).'-cache-'),
+    'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'SocialMesh')).'-cache-'),
 
     /*
     |--------------------------------------------------------------------------

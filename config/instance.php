@@ -6,8 +6,8 @@ return [
     'self_hosted' => env('SELF_HOSTED', false),
 
     'community' => [
-        'repo' => env('SHOUTRRR_GITHUB_REPO', 'coollabsio/shoutrrr'),
-        'sponsor_url' => env('SHOUTRRR_SPONSOR_URL', 'https://github.com/sponsors/coollabsio'),
+        'repo' => env('SHOUTRRR_GITHUB_REPO', 'revanthlol/socialmesh'),
+        'sponsor_url' => env('SHOUTRRR_SPONSOR_URL', ''),
     ],
 
     'defaults' => [

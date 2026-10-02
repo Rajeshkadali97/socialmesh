@@ -113,7 +113,7 @@ export default function Subscription({
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Shoutrrr Cloud</CardTitle>
+                        <CardTitle>SocialMesh Cloud</CardTitle>
                         <CardDescription>
                             Unlimited seats with monthly X publishing included.
                         </CardDescription>

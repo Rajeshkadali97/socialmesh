@@ -1,7 +1,7 @@
 {
-  "name": "shoutrrr",
-  "short_name": "shoutrrr",
-  "description": "Self-hosted social media scheduler.",
+  "name": "SocialMesh",
+  "short_name": "SocialMesh",
+  "description": "Self-hosted social media publishing and scheduling.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

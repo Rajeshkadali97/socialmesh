@@ -32,7 +32,7 @@ class NativeTrackingController extends Controller
 
         if (! $account->platform->supportsNativeRead()) {
             throw ValidationException::withMessages([
-                'account' => ucfirst($account->platform->value).' does not support native tracking, so its posts can only sync when published through Shoutrrr.',
+                'account' => ucfirst($account->platform->value).' does not support native tracking, so its posts can only sync when published through SocialMesh.',
             ]);
         }
         if (! $account->nativeWatch()->exists() && ! $this->gate->canTrackNativeAccount($workspace)) {

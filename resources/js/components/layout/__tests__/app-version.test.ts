@@ -12,7 +12,7 @@ describe('app version badge', () => {
 
     it('links the displayed version to the matching GitHub release', () => {
         expect(githubReleaseUrl).toBe(
-            `https://github.com/coollabsio/shoutrrr/releases/tag/${appVersion}`,
+            `https://github.com/revanthlol/socialmesh/releases/tag/${appVersion}`,
         );
     });
 });
