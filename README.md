@@ -61,7 +61,7 @@ It's built for individuals and teams: invite collaborators into a shared workspa
 
 ## Self-hosting
 
-SocialMesh publishes its own multi-architecture image to GHCR. For an Oracle VPS deployment, follow the [SocialMesh production deployment guide](docs/SOCIALMESH_PRODUCTION_DEPLOYMENT.md). The production Compose stack pulls `ghcr.io/revanthlol/socialmesh` and uses Caddy for automatic HTTPS; it does not build the source on the server.
+SocialMesh publishes its own multi-architecture image to GHCR. For an Oracle VPS deployment, follow the [SocialMesh production deployment guide](docs/SOCIALMESH_PRODUCTION_DEPLOYMENT.md). The production Compose stack pulls `ghcr.io/revanthlol/socialmesh` and binds the app to loopback for the host nginx reverse proxy; it does not build source on the server.
 
 For local development with source mounts and Vite HMR, use `docker-compose.dev.yml` and the development instructions in the repository. Do not use the upstream Shoutrrr image or the production stack for frontend development.
 

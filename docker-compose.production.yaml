@@ -1,4 +1,5 @@
-# SocialMesh production stack. The VPS pulls a prebuilt multi-architecture image.
+# SocialMesh production stack. The host nginx terminates TLS and proxies to the
+# app's loopback-only port 8082. The VPS pulls a prebuilt multi-architecture image.
 name: socialmesh
 
 x-environment: &app-env
@@ -6,7 +7,7 @@ x-environment: &app-env
     APP_ENV: "${APP_ENV:-production}"
     APP_KEY: "${APP_KEY:?Set APP_KEY in .env}"
     APP_DEBUG: "${APP_DEBUG:-false}"
-    APP_URL: "${APP_URL:-https://socialmesh.slotforge.qd.je}"
+    APP_URL: "${APP_URL:-https://socialmesh.ocus.qd.je}"
     OCTANE_SERVER: frankenphp
     OCTANE_HTTPS: "${OCTANE_HTTPS:-true}"
     SESSION_SECURE_COOKIE: "${SESSION_SECURE_COOKIE:-true}"
@@ -27,14 +28,15 @@ x-environment: &app-env
     AWS_USE_PATH_STYLE_ENDPOINT: "${AWS_USE_PATH_STYLE_ENDPOINT:-true}"
     FACEBOOK_CLIENT_ID: "${FACEBOOK_CLIENT_ID:-}"
     FACEBOOK_CLIENT_SECRET: "${FACEBOOK_CLIENT_SECRET:-}"
-    FACEBOOK_REDIRECT_URI: "${FACEBOOK_REDIRECT_URI:-${APP_URL:-https://socialmesh.slotforge.qd.je}/accounts/callback/meta}"
+    FACEBOOK_REDIRECT_URI: "${FACEBOOK_REDIRECT_URI:-${APP_URL:-https://socialmesh.ocus.qd.je}/accounts/callback/meta}"
     FACEBOOK_GRAPH_VERSION: "${FACEBOOK_GRAPH_VERSION:-v25.0}"
     THREADS_CLIENT_ID: "${THREADS_CLIENT_ID:-}"
     THREADS_CLIENT_SECRET: "${THREADS_CLIENT_SECRET:-}"
-    THREADS_REDIRECT_URI: "${THREADS_REDIRECT_URI:-${APP_URL:-https://socialmesh.slotforge.qd.je}/accounts/callback/threads}"
+    THREADS_REDIRECT_URI: "${THREADS_REDIRECT_URI:-${APP_URL:-https://socialmesh.ocus.qd.je}/accounts/callback/threads}"
     DIRECT_MESSAGES_ENABLED: "${DIRECT_MESSAGES_ENABLED:-false}"
     QUEUE_WORKER_ENABLED: "${QUEUE_WORKER_ENABLED:-true}"
     QUEUE_WORKER_COUNT: "${QUEUE_WORKER_COUNT:-1}"
+    QUEUE_WORKER_MEMORY_MB: "${QUEUE_WORKER_MEMORY_MB:-256}"
     SCHEDULER_ENABLED: "${SCHEDULER_ENABLED:-true}"
     INERTIA_SSR_ENABLED: "${INERTIA_SSR_ENABLED:-false}"
 
@@ -47,8 +49,8 @@ services:
             - .env
         environment:
             <<: *app-env
-        expose:
-            - "8080"
+        ports:
+            - "127.0.0.1:8082:8080"
         volumes:
             - socialmesh_storage:/var/www/html/storage
             - socialmesh_sqlite:/var/www/html/database/sqlite
@@ -60,31 +62,8 @@ services:
             timeout: 10s
             retries: 3
 
-    caddy:
-        image: caddy:2-alpine
-        restart: unless-stopped
-        depends_on:
-            app:
-                condition: service_healthy
-        ports:
-            - "80:80"
-            - "443:443"
-        volumes:
-            - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
-            - socialmesh_caddy_data:/data
-            - socialmesh_caddy_config:/config
-        healthcheck:
-            test: ["CMD", "caddy", "validate", "--config", "/etc/caddy/Caddyfile"]
-            interval: 30s
-            timeout: 5s
-            retries: 3
-
 volumes:
     socialmesh_storage:
         name: socialmesh_storage
     socialmesh_sqlite:
         name: socialmesh_sqlite
-    socialmesh_caddy_data:
-        name: socialmesh_caddy_data
-    socialmesh_caddy_config:
-        name: socialmesh_caddy_config
