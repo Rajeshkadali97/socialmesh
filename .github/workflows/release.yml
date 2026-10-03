@@ -1,16 +1,16 @@
 name: release
 
-# Build the production image and push it to GHCR when a GitHub Release is
-# published. workflow_dispatch is kept for manually testing the pipeline (it
-# pushes a sha-tagged image instead of a versioned/latest one).
+# Build and publish SocialMesh for both supported CPU architectures whenever
+# main changes. Releases and manual runs are also supported.
 on:
+  push:
+    branches: [main]
   release:
     types: [published]
   workflow_dispatch:
 
-# coollabsio/shoutrrr -> ghcr.io/coollabsio/shoutrrr
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository }}
+  IMAGE_NAME: ghcr.io/revanthlol/socialmesh
 
 permissions:
   contents: read
@@ -53,13 +53,12 @@ jobs:
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ env.IMAGE_NAME }}
-          # Tag releases with their semver; only move :latest for stable releases.
-          # A manual dispatch gets a sha tag so the push doesn't fail without a tag.
+          # Releases get semver tags. Main publishes :latest and a full sha tag.
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable=${{ github.event_name == 'release' && github.event.release.prerelease == false }}
-            type=sha,enable=${{ github.event_name == 'workflow_dispatch' }}
+            type=raw,value=latest,enable=${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'release' && github.event.release.prerelease == false) }}
+            type=sha,format=long,enable=${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
           flavor: |
             latest=false
 
@@ -131,8 +130,8 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable=${{ github.event_name == 'release' && github.event.release.prerelease == false }}
-            type=sha,enable=${{ github.event_name == 'workflow_dispatch' }}
+            type=raw,value=latest,enable=${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'release' && github.event.release.prerelease == false) }}
+            type=sha,format=long,enable=${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
           flavor: |
             latest=false
 
