@@ -1,0 +1,69 @@
+# SocialMesh production stack. The host nginx terminates TLS and proxies to the
+# app's loopback-only port 8082. The VPS pulls a prebuilt multi-architecture image.
+name: socialmesh
+
+x-environment: &app-env
+    APP_NAME: "${APP_NAME:-SocialMesh}"
+    APP_ENV: "${APP_ENV:-production}"
+    APP_KEY: "${APP_KEY:?Set APP_KEY in .env}"
+    APP_DEBUG: "${APP_DEBUG:-false}"
+    APP_URL: "${APP_URL:-https://socialmesh.ocus.qd.je}"
+    OCTANE_SERVER: frankenphp
+    OCTANE_HTTPS: "${OCTANE_HTTPS:-true}"
+    SESSION_SECURE_COOKIE: "${SESSION_SECURE_COOKIE:-true}"
+    TRUSTED_PROXIES: "${TRUSTED_PROXIES:-*}"
+    ASSET_URL: "${ASSET_URL:-}"
+    DB_CONNECTION: "${DB_CONNECTION:-sqlite}"
+    DB_DATABASE: "${DB_DATABASE:-/var/www/html/database/sqlite/database.sqlite}"
+    CACHE_STORE: "${CACHE_STORE:-database}"
+    QUEUE_CONNECTION: "${QUEUE_CONNECTION:-database}"
+    SESSION_DRIVER: "${SESSION_DRIVER:-database}"
+    FILESYSTEM_DISK: "${FILESYSTEM_DISK:-s3}"
+    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:-}"
+    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:-}"
+    AWS_DEFAULT_REGION: "${AWS_DEFAULT_REGION:-auto}"
+    AWS_BUCKET: "${AWS_BUCKET:-}"
+    AWS_ENDPOINT: "${AWS_ENDPOINT:-}"
+    AWS_URL: "${AWS_URL:-}"
+    AWS_USE_PATH_STYLE_ENDPOINT: "${AWS_USE_PATH_STYLE_ENDPOINT:-true}"
+    FACEBOOK_CLIENT_ID: "${FACEBOOK_CLIENT_ID:-}"
+    FACEBOOK_CLIENT_SECRET: "${FACEBOOK_CLIENT_SECRET:-}"
+    FACEBOOK_REDIRECT_URI: "${FACEBOOK_REDIRECT_URI:-${APP_URL:-https://socialmesh.ocus.qd.je}/accounts/callback/meta}"
+    FACEBOOK_GRAPH_VERSION: "${FACEBOOK_GRAPH_VERSION:-v25.0}"
+    THREADS_CLIENT_ID: "${THREADS_CLIENT_ID:-}"
+    THREADS_CLIENT_SECRET: "${THREADS_CLIENT_SECRET:-}"
+    THREADS_REDIRECT_URI: "${THREADS_REDIRECT_URI:-${APP_URL:-https://socialmesh.ocus.qd.je}/accounts/callback/threads}"
+    DIRECT_MESSAGES_ENABLED: "${DIRECT_MESSAGES_ENABLED:-false}"
+    QUEUE_WORKER_ENABLED: "${QUEUE_WORKER_ENABLED:-true}"
+    QUEUE_WORKER_COUNT: "${QUEUE_WORKER_COUNT:-1}"
+    QUEUE_WORKER_MEMORY_MB: "${QUEUE_WORKER_MEMORY_MB:-256}"
+    SCHEDULER_ENABLED: "${SCHEDULER_ENABLED:-true}"
+    INERTIA_SSR_ENABLED: "${INERTIA_SSR_ENABLED:-false}"
+
+services:
+    app:
+        image: "ghcr.io/revanthlol/socialmesh:${SOCIALMESH_IMAGE_TAG:-latest}"
+        pull_policy: always
+        restart: unless-stopped
+        env_file:
+            - .env
+        environment:
+            <<: *app-env
+        ports:
+            - "127.0.0.1:8082:8080"
+        volumes:
+            - socialmesh_storage:/var/www/html/storage
+            - socialmesh_sqlite:/var/www/html/database/sqlite
+        stop_grace_period: 60s
+        healthcheck:
+            test: ["CMD", "healthcheck-octane"]
+            start_period: 30s
+            interval: 30s
+            timeout: 10s
+            retries: 3
+
+volumes:
+    socialmesh_storage:
+        name: socialmesh_storage
+    socialmesh_sqlite:
+        name: socialmesh_sqlite
