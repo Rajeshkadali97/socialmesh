@@ -2,6 +2,7 @@ import { Deferred, Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef } from 'react';
 
 import Composer from '@/components/compose/composer';
+import { DashboardRail } from '@/components/dashboard/dashboard-rail';
 import { RecentFeed } from '@/components/dashboard/recent-feed';
 import { GettingStartedCard } from '@/components/onboarding/getting-started-card';
 import { WelcomeModal } from '@/components/onboarding/welcome-modal';
@@ -68,7 +69,7 @@ function NoAccountsNotice() {
 
 export default function Dashboard({ posts, onboarding, savedMentions }: Props) {
     const page = usePage();
-    const { auth, shell, workspaces } = page.props;
+    const { auth, shell, workspaces, features } = page.props;
     const firstName = (auth.user?.name ?? '').split(/\s+/)[0] || 'there';
     const showNoAccountsNotice = shouldShowDashboardNoAccountsNotice(
         shell.accounts,
@@ -112,7 +113,7 @@ export default function Dashboard({ posts, onboarding, savedMentions }: Props) {
     return (
         <>
             <Head title="Dashboard" />
-            <div className="mx-auto w-full max-w-7xl px-4 pt-6 pb-16 sm:px-6">
+            <div className="mx-auto w-full max-w-[88rem] px-4 pt-6 pb-16 sm:px-6">
                 {onboarding && <WelcomeModal welcomed={onboarding.welcomed} />}
                 <h1 className="text-[26px] leading-tight font-semibold tracking-tight">
                     {timeGreeting()},{' '}
@@ -126,25 +127,42 @@ export default function Dashboard({ posts, onboarding, savedMentions }: Props) {
                     Write something new — it autosaves as you go.
                 </p>
 
-                {onboarding && <GettingStartedCard onboarding={onboarding} />}
+                <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+                    <div className="min-w-0">
+                        {onboarding && (
+                            <GettingStartedCard onboarding={onboarding} />
+                        )}
 
-                {showNoAccountsNotice && <NoAccountsNotice />}
+                        {showNoAccountsNotice && <NoAccountsNotice />}
 
-                <Composer
-                    post={null}
-                    accounts={shell.accounts}
-                    sets={shell.sets}
-                    limits={shell.limits}
-                    initialScheduleAt={initialScheduleAt}
-                    initialDestination={initialDestination}
-                    initialSavedMentions={savedMentions}
-                    autoFocusEditor
-                    onSaved={refreshRecentPosts}
-                />
+                        <Composer
+                            post={null}
+                            accounts={shell.accounts}
+                            sets={shell.sets}
+                            limits={shell.limits}
+                            initialScheduleAt={initialScheduleAt}
+                            initialDestination={initialDestination}
+                            initialSavedMentions={savedMentions}
+                            autoFocusEditor
+                            onSaved={refreshRecentPosts}
+                        />
 
-                <Deferred data="posts" fallback={<RecentFeedSkeleton />}>
-                    <RecentFeed posts={posts ?? []} />
-                </Deferred>
+                        <Deferred
+                            data="posts"
+                            fallback={<RecentFeedSkeleton />}
+                        >
+                            <RecentFeed posts={posts ?? []} />
+                        </Deferred>
+                    </div>
+
+                    <DashboardRail
+                        accounts={shell.accounts}
+                        unreadReplies={shell.unreadReplies}
+                        unreadMessages={shell.unreadMessages}
+                        engagementEnabled={features?.engagement !== false}
+                        messagesEnabled={features?.messages !== false}
+                    />
+                </div>
             </div>
         </>
     );
