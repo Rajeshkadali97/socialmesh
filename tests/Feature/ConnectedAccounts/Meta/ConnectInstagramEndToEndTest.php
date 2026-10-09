@@ -13,6 +13,14 @@ use App\Services\Publishing\PublishConnectorRegistry;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
+beforeEach(function () {
+    // The post-connect DM backfill lists conversations; keep it off the real network.
+    Http::fake([
+        'graph.facebook.com/*/conversations*' => Http::response(['data' => []]),
+        'bsky.social/xrpc/chat.bsky.convo.listConvos*' => Http::response(['convos' => []]),
+    ]);
+});
+
 /**
  * The positive path deferred from Task 2's ConnectMetaTest guard tests: with
  * Instagram launched, a stashed Page selection with a linked IG Professional

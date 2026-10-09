@@ -12,6 +12,14 @@ use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\AbstractProvider;
 use Laravel\Socialite\Two\User as SocialiteUser;
 
+beforeEach(function () {
+    // The post-connect DM backfill lists conversations; keep it off the real network.
+    Http::fake([
+        'graph.facebook.com/*/conversations*' => Http::response(['data' => []]),
+        'bsky.social/xrpc/chat.bsky.convo.listConvos*' => Http::response(['convos' => []]),
+    ]);
+});
+
 function metaOwnerActingIn(): array
 {
     $user = User::factory()->create(['email_verified_at' => now()]);
