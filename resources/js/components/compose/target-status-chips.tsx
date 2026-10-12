@@ -16,7 +16,7 @@ import type { TargetView } from '@/types/compose';
 
 const TONE_CLASS: Record<TargetTone, string> = {
     pending: 'bg-muted text-muted-foreground',
-    active: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+    active: 'bg-brand-green/10 text-brand-green',
     success: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-500',
     error: 'bg-destructive/10 text-destructive',
     muted: 'bg-muted text-muted-foreground',

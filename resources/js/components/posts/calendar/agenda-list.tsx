@@ -18,7 +18,7 @@ function stripTone(status: PostStatus): string {
         return 'bg-muted-foreground/40';
     }
 
-    return 'bg-sky-500 dark:bg-sky-400';
+    return 'bg-brand-green';
 }
 
 /** The calendar days the agenda spans for the active view. */

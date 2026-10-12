@@ -32,7 +32,7 @@ export default function SaveIndicator({
                 className={cn(
                     'size-1.5 rounded-full',
                     state === 'saved' && 'bg-primary',
-                    state === 'saving' && 'animate-pulse bg-blue-500',
+                    state === 'saving' && 'animate-pulse bg-brand-orange',
                     state === 'dirty' && 'bg-amber-500',
                     state === 'conflict' && 'bg-destructive',
                     state === 'offline' && 'bg-amber-500',
