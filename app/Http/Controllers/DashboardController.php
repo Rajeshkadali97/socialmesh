@@ -25,15 +25,18 @@ class DashboardController extends Controller
         $user = $request->user();
         $workspace = $user?->currentWorkspace;
 
-        $current = collect(ClientOverview::make($user))->firstWhere('id', $user->current_workspace_id);
-
         return Inertia::render('dashboard', [
-            'weekStats' => $current === null ? null : [
-                'scheduled_next_7_days' => $current['posts']['next_7_days'],
-                'published_last_7_days' => $current['posts']['published_7_days'],
-                'drafts' => Post::query()->where('status', PostStatus::Draft->value)->count(),
-                'needs_attention' => $current['posts']['problems'] + $current['accounts']['needs_attention'],
-            ],
+            // A closure, so partial reloads that don't ask for it skip the aggregates.
+            'weekStats' => function () use ($user): ?array {
+                $current = collect(ClientOverview::make($user))->firstWhere('id', $user->current_workspace_id);
+
+                return $current === null ? null : [
+                    'scheduled_next_7_days' => $current['posts']['next_7_days'],
+                    'published_last_7_days' => $current['posts']['published_7_days'],
+                    'drafts' => Post::query()->where('status', PostStatus::Draft->value)->count(),
+                    'needs_attention' => $current['posts']['problems'] + $current['accounts']['needs_attention'],
+                ];
+            },
             'onboarding' => $workspace instanceof Workspace
                 ? OnboardingPresenter::make($workspace, $user)
                 : null,
