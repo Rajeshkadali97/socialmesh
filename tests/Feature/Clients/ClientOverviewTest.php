@@ -172,3 +172,16 @@ test('the clients page renders the overview for the signed-in user', function ()
             ->where('clients.0.id', $mine->id)
             ->where('clients.0.name', 'Acme'));
 });
+
+test('dashboard passes this workspace’s week stats', function () {
+    $workspace = clientFor($this->user, 'Acme');
+    $this->user->forceFill(['current_workspace_id' => $workspace->id])->save();
+    Post::factory()->create(['workspace_id' => $workspace->id, 'status' => PostStatus::Draft]);
+    Post::factory()->create(['workspace_id' => $workspace->id, 'status' => PostStatus::Scheduled, 'scheduled_at' => now()->addDays(2)]);
+    Post::factory()->create(['workspace_id' => clientFor($this->user, 'Other')->id, 'status' => PostStatus::Draft]);
+
+    $this->actingAs($this->user)->get('/dashboard')->assertInertia(fn (Assert $page) => $page
+        ->where('weekStats.drafts', 1)
+        ->where('weekStats.scheduled_next_7_days', 1)
+        ->where('weekStats.published_last_7_days', 0));
+});

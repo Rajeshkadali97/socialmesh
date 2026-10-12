@@ -5,6 +5,10 @@ import Composer from '@/components/compose/composer';
 import { DashboardRail } from '@/components/dashboard/dashboard-rail';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { RecentFeed } from '@/components/dashboard/recent-feed';
+import {
+    WeekStats,
+    type WeekStatsData,
+} from '@/components/dashboard/week-stats';
 import { GettingStartedCard } from '@/components/onboarding/getting-started-card';
 import { WelcomeModal } from '@/components/onboarding/welcome-modal';
 import type { PostRowData } from '@/components/posts/post-row';
@@ -28,6 +32,7 @@ type Props = {
     posts?: PostRowData[];
     onboarding: OnboardingData | null;
     savedMentions: WorkspaceMention[];
+    weekStats: WeekStatsData | null;
 };
 
 function timeGreeting(): string {
@@ -68,7 +73,12 @@ function NoAccountsNotice() {
     );
 }
 
-export default function Dashboard({ posts, onboarding, savedMentions }: Props) {
+export default function Dashboard({
+    posts,
+    onboarding,
+    savedMentions,
+    weekStats,
+}: Props) {
     const page = usePage();
     const { auth, shell, workspaces, features } = page.props;
     const firstName = (auth.user?.name ?? '').split(/\s+/)[0] || 'there';
@@ -130,6 +140,8 @@ export default function Dashboard({ posts, onboarding, savedMentions }: Props) {
 
                 <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
                     <div className="min-w-0">
+                        {weekStats && <WeekStats stats={weekStats} />}
+
                         <QuickActions multiClient={workspaces.all.length > 1} />
 
                         {onboarding && (
