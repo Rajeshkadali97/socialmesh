@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Concerns\HasWorkspaceScope;
 use Database\Factories\SyncPipelineFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,18 +22,17 @@ use Override;
  * @property bool $enabled
  * @property string|null $created_by
  */
+#[Fillable([
+    'workspace_id',
+    'source_connected_account_id',
+    'name',
+    'enabled',
+    'created_by',
+])]
 class SyncPipeline extends Model
 {
     /** @use HasFactory<SyncPipelineFactory> */
     use HasFactory, HasUuids, HasWorkspaceScope;
-
-    protected $fillable = [
-        'workspace_id',
-        'source_connected_account_id',
-        'name',
-        'enabled',
-        'created_by',
-    ];
 
     #[Override]
     protected function casts(): array

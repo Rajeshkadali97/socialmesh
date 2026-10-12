@@ -12,7 +12,7 @@ test('meta scopes include ig and fb dm scopes when direct messages enabled', fun
     config()->set('messages.direct_messages_enabled', true);
 
     $controller = app(MetaConnectionController::class);
-    $scopes = (fn () => $this->scopes())->call($controller);
+    $scopes = ($this->scopes(...))->call($controller);
 
     expect($scopes)
         ->toContain('instagram_manage_messages')
@@ -25,7 +25,7 @@ test('meta scopes exclude ig and fb dm scopes when direct messages disabled', fu
     config()->set('messages.direct_messages_enabled', false);
 
     $controller = app(MetaConnectionController::class);
-    $scopes = (fn () => $this->scopes())->call($controller);
+    $scopes = ($this->scopes(...))->call($controller);
 
     expect($scopes)
         ->not->toContain('instagram_manage_messages')

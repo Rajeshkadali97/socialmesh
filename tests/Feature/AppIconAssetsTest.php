@@ -47,8 +47,6 @@ it('uses the current source artwork bounds for the app icon', function (): void 
         }
     }
 
-    imagedestroy($image);
-
     expect($left)->toBe(9);
     expect($right)->toBe(506);
     expect($top)->toBe(20);

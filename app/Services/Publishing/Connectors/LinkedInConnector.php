@@ -72,7 +72,7 @@ class LinkedInConnector implements PublishConnector, RepostConnector
 
         $author = $context->account->linkedInAuthorUrn();
         $text = implode("\n", array_values(array_filter(
-            array_map(static fn (string $segment): string => trim($segment), $context->segments),
+            array_map(trim(...), $context->segments),
             static fn (string $segment): bool => $segment !== '',
         )));
 
@@ -302,9 +302,7 @@ class LinkedInConnector implements PublishConnector, RepostConnector
             $source = (string) ($response->effectiveUri() ?? $url);
             $title = $this->metaContent($html, ['og:title', 'twitter:title']) ?? $this->titleTag($html);
 
-            if ($title === null) {
-                $title = parse_url($source, PHP_URL_HOST) ?: $source;
-            }
+            $title ??= parse_url($source, PHP_URL_HOST) ?: $source;
 
             $article = [
                 'source' => $source,

@@ -9,12 +9,14 @@ use App\Models\SyncPipeline;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Override;
 
 /**
  * @extends Factory<SyncPipeline>
  */
 class SyncPipelineFactory extends Factory
 {
+    #[Override]
     protected $model = SyncPipeline::class;
 
     /**

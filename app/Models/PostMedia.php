@@ -9,10 +9,12 @@ use App\Services\Media\DerivedMedia;
 use App\Support\FileStorage;
 use Database\Factories\PostMediaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Override;
 
 /**
  * @property string $id
@@ -51,12 +53,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'source_path',
     'edit_settings',
 ])]
+#[Table(name: 'post_media')]
 class PostMedia extends Model
 {
     /** @use HasFactory<PostMediaFactory> */
     use HasFactory, HasUuids, HasWorkspaceScope;
-
-    protected $table = 'post_media';
 
     /**
      * In-memory default so a row freshly created without an explicit kind still
@@ -64,6 +65,7 @@ class PostMedia extends Model
      *
      * @var array<string, mixed>
      */
+    #[Override]
     protected $attributes = ['kind' => 'image'];
 
     /**

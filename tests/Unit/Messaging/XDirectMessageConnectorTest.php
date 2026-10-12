@@ -143,18 +143,7 @@ function xDmUploadCarried(string $field, string $value): callable
 
         $body = (string) $request->body();
 
-        // Bind the field name to its value within the same multipart part, so a
-        // stray occurrence of the value in an unrelated part can't pass the check.
-        // Parts carry a `Content-Length` header between the name and the value, so
-        // match the whole part rather than assuming name is immediately followed
-        // by value.
-        foreach (preg_split('/--+[A-Za-z0-9]+/', $body) ?: [] as $part) {
-            if (str_contains($part, 'name="'.$field.'"') && str_contains($part, $value)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any(preg_split('/--+[A-Za-z0-9]+/', $body) ?: [], fn ($part) => str_contains($part, 'name="'.$field.'"') && str_contains($part, $value));
     };
 }
 

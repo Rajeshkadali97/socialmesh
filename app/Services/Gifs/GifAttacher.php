@@ -129,13 +129,7 @@ class GifAttacher
     {
         $host = strtolower((string) parse_url($url, PHP_URL_HOST));
 
-        foreach (self::ALLOWED_HOST_SUFFIXES as $suffix) {
-            if ($host === $suffix || str_ends_with($host, '.'.$suffix)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any(self::ALLOWED_HOST_SUFFIXES, fn ($suffix) => $host === $suffix || str_ends_with($host, '.'.$suffix));
     }
 
     /**

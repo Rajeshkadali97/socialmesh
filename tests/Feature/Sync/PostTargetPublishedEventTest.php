@@ -13,7 +13,7 @@ test('the listener forwards the target to the fan-out service', function () {
     $service = Mockery::mock(SyncFanOutService::class);
     $service->shouldReceive('fanOut')->once()->with($target);
 
-    (new TriggerSyncPipelines($service))->handle(new PostTargetPublished($target));
+    new TriggerSyncPipelines($service)->handle(new PostTargetPublished($target));
 });
 
 test('the event is registered to the sync listener', function () {

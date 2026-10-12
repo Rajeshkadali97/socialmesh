@@ -27,6 +27,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 class BlueskyEngagementConnector implements EngagementConnector
 {
@@ -444,7 +445,7 @@ class BlueskyEngagementConnector implements EngagementConnector
 }
 
 /** @internal */
-final class BlueskyReplyMediaFailed extends \RuntimeException
+final class BlueskyReplyMediaFailed extends RuntimeException
 {
     public function __construct(public readonly int $status)
     {

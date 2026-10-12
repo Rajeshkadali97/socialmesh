@@ -60,6 +60,7 @@ class Post extends Model
     /**
      * @var array<string, mixed>
      */
+    #[Override]
     protected $attributes = [
         'origin' => 'composer',
         'skip_sync' => false,

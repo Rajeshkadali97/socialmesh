@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Models\Workspace;
+use App\Notifications\PostPublishedNotification;
 use Illuminate\Support\Str;
 
 function makeNotification(User $user, ?string $workspaceId, ?string $readAt = null): string
@@ -11,7 +12,7 @@ function makeNotification(User $user, ?string $workspaceId, ?string $readAt = nu
     $id = (string) Str::uuid();
     $user->notifications()->create([
         'id' => $id,
-        'type' => 'App\\Notifications\\PostPublishedNotification',
+        'type' => PostPublishedNotification::class,
         'data' => ['event' => 'post_published', 'title' => 'X', 'body' => '', 'href' => null, 'icon' => 'bell', 'workspace_id' => $workspaceId],
         'read_at' => $readAt,
     ]);

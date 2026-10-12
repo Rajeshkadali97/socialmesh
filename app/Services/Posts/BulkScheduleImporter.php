@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\Workspace;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -131,7 +132,7 @@ class BulkScheduleImporter
             if ($blocking !== []) {
                 $first = $blocking[0];
 
-                throw new \RuntimeException($this->precheck->describe($first['issues'], Platform::from($first['platform'])));
+                throw new RuntimeException($this->precheck->describe($first['issues'], Platform::from($first['platform'])));
             }
 
             $post->forceFill([

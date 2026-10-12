@@ -9,7 +9,7 @@ use App\Enums\PostStatus;
 final class ShareReview
 {
     /** Statuses where a client's approval is still meaningful (not yet out the door). */
-    public const REVIEWABLE = [PostStatus::Draft, PostStatus::Scheduled];
+    public const array REVIEWABLE = [PostStatus::Draft, PostStatus::Scheduled];
 
-    public const DECISIONS = ['approved', 'changes_requested'];
+    public const array DECISIONS = ['approved', 'changes_requested'];
 }

@@ -17,10 +17,10 @@ class PostTargetMetricFactory extends Factory
         return [
             'post_target_id' => PostTarget::factory(),
             'captured_at' => Date::now(),
-            'likes' => $this->faker->numberBetween(0, 500),
-            'comments' => $this->faker->numberBetween(0, 100),
-            'reposts' => $this->faker->numberBetween(0, 100),
-            'impressions' => $this->faker->numberBetween(0, 5000),
+            'likes' => fake()->numberBetween(0, 500),
+            'comments' => fake()->numberBetween(0, 100),
+            'reposts' => fake()->numberBetween(0, 100),
+            'impressions' => fake()->numberBetween(0, 5000),
         ];
     }
 }

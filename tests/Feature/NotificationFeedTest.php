@@ -90,7 +90,7 @@ test('a foreign cursor on another cursor-paginated page does not break the share
         'role' => WorkspaceRole::Owner,
     ]);
 
-    $foreignCursor = (new Cursor(['id' => 'not-a-notification-cursor'], true))->encode();
+    $foreignCursor = new Cursor(['id' => 'not-a-notification-cursor'], true)->encode();
 
     $this->actingAs($user)
         ->get(route('posts.index', ['cursor' => $foreignCursor]))

@@ -9,14 +9,14 @@ use App\Enums\Platform;
 use App\Jobs\IngestNativePosts;
 use App\Models\ConnectedAccountNativeWatch;
 use App\Services\Billing\WorkspaceSubscriptionGate;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
+#[Description('Poll tracked accounts for native posts and ingest new ones as External.')]
+#[Signature('sync:poll-native')]
 class PollNativePosts extends Command
 {
-    protected $signature = 'sync:poll-native';
-
-    protected $description = 'Poll tracked accounts for native posts and ingest new ones as External.';
-
     public function handle(WorkspaceSubscriptionGate $gate): int
     {
         if (! config('sync.enabled')) {

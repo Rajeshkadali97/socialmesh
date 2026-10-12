@@ -37,7 +37,7 @@ class PostMediaFactory extends Factory
         return $this->state(fn (): array => [
             'kind' => 'video',
             'mime' => 'video/mp4',
-            'duration_seconds' => $this->faker->numberBetween(3, 120),
+            'duration_seconds' => fake()->numberBetween(3, 120),
             'width' => 1280,
             'height' => 720,
         ]);

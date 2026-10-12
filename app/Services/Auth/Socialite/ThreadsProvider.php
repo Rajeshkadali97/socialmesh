@@ -7,6 +7,7 @@ namespace App\Services\Auth\Socialite;
 use Illuminate\Support\Facades\Http;
 use Laravel\Socialite\Two\AbstractProvider;
 use Laravel\Socialite\Two\User;
+use Override;
 
 /**
  * Hand-rolled Socialite driver for Threads.
@@ -22,6 +23,7 @@ use Laravel\Socialite\Two\User;
  */
 class ThreadsProvider extends AbstractProvider
 {
+    #[Override]
     protected $scopeSeparator = ',';
 
     /**
@@ -31,6 +33,7 @@ class ThreadsProvider extends AbstractProvider
      *
      * @var array<int, string>
      */
+    #[Override]
     protected $scopes = ['threads_basic', 'threads_content_publish', 'threads_manage_replies', 'threads_manage_insights', 'threads_delete'];
 
     protected function getAuthUrl($state): string

@@ -12,9 +12,7 @@ use App\Http\Middleware\NoIndex;
 use App\Services\Gifs\KlipyClient;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect()->route(auth()->check() ? 'dashboard' : 'login');
-})->name('home');
+Route::get('/', fn () => redirect()->route(auth()->check() ? 'dashboard' : 'login'))->name('home');
 
 Route::get('/share/{token}', [PublicShareController::class, 'show'])
     ->middleware([NoIndex::class, 'throttle:30,1'])

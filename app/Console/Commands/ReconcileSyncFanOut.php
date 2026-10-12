@@ -9,16 +9,16 @@ use App\Enums\PostTargetStatus;
 use App\Models\PostTarget;
 use App\Models\SyncPipeline;
 use App\Services\Sync\SyncFanOutService;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Date;
 
+#[Description('Backstop that fans out any recently published source posts missed by the publish event.')]
+#[Signature('sync:reconcile')]
 class ReconcileSyncFanOut extends Command
 {
-    protected $signature = 'sync:reconcile';
-
-    protected $description = 'Backstop that fans out any recently published source posts missed by the publish event.';
-
     public function handle(SyncFanOutService $fanOut): int
     {
         if (! config('sync.enabled')) {
