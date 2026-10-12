@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ClientOverviewController;
 use App\Http\Controllers\CommandSearchController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Gifs\GifBrowserController;
@@ -21,6 +22,7 @@ Route::get('/share/{token}', [PublicShareController::class, 'show'])
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('clients', [ClientOverviewController::class, 'index'])->name('clients.index');
     Route::post('workspace-mentions', [WorkspaceMentionController::class, 'store'])->name('workspace-mentions.store');
     Route::delete('workspace-mentions/{workspaceMention}', [WorkspaceMentionController::class, 'destroy'])->name('workspace-mentions.destroy');
 
