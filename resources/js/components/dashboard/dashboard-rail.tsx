@@ -113,6 +113,33 @@ export function DashboardRail({
 
     return (
         <aside className="hidden space-y-5 xl:block" aria-label="Overview">
+            <div className="relative overflow-hidden rounded-3xl bg-brand-green p-5 text-primary-foreground shadow-[0_18px_40px_-18px_rgb(15_61_62/0.6)] dark:text-foreground">
+                <span
+                    aria-hidden
+                    className="absolute -top-10 -right-8 size-36 rounded-full bg-brand-orange/30 blur-sm"
+                />
+                <span
+                    aria-hidden
+                    className="absolute -right-2 -bottom-12 size-28 rounded-full bg-brand-peach/20"
+                />
+                <p className="relative text-xs font-medium tracking-wide uppercase opacity-70">
+                    Agency tip
+                </p>
+                <p className="relative mt-1 text-lg leading-snug font-semibold">
+                    Plan a whole week in one go
+                </p>
+                <p className="relative mt-1 text-[13px] opacity-75">
+                    Paste rows from a spreadsheet and schedule up to 50 posts
+                    for this client.
+                </p>
+                <Link
+                    href="/posts/bulk"
+                    className="relative mt-4 inline-flex h-9 items-center rounded-full bg-brand-orange px-5 text-sm font-semibold text-white shadow-sm transition hover:brightness-110"
+                >
+                    Bulk schedule
+                </Link>
+            </div>
+
             <Card size="sm">
                 <CardHeader>
                     <CardTitle>Needs your attention</CardTitle>
