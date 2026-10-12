@@ -22,3 +22,13 @@ export type PublicPostView = {
     targets: PublicTarget[];
     media: PublicMedia[];
 };
+
+export type ShareDecision = 'approved' | 'changes_requested';
+
+export type ShareReview = {
+    can_review: boolean;
+    decision: ShareDecision | null;
+    note: string | null;
+    reviewer_name: string | null;
+    decided_at: string | null; // ISO
+};

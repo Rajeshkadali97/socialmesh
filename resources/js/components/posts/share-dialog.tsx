@@ -41,6 +41,10 @@ type ShareItem = {
     id: string;
     expires_at: string | null;
     created_at: string;
+    decision: 'approved' | 'changes_requested' | null;
+    decision_note: string | null;
+    reviewer_name: string | null;
+    decided_at: string | null;
 };
 
 type CreatedShare = {
@@ -224,12 +228,32 @@ export function ShareDialog({ postId, open, onOpenChange }: Props) {
                         activeShares.map((share) => (
                             <div
                                 key={share.id}
-                                className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-[12.5px]"
+                                className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-[12.5px]"
                             >
-                                <span className="text-muted-foreground">
+                                <span className="min-w-0 text-muted-foreground">
                                     {share.expires_at
                                         ? `Expires ${dayjs(share.expires_at).format('MMM D, YYYY')}`
                                         : 'Never expires'}
+                                    {share.decision && (
+                                        <span
+                                            className={
+                                                share.decision === 'approved'
+                                                    ? 'mt-0.5 block font-medium text-success'
+                                                    : 'mt-0.5 block font-medium text-foreground'
+                                            }
+                                        >
+                                            {share.decision === 'approved'
+                                                ? 'Approved'
+                                                : 'Changes requested'}
+                                            {share.reviewer_name &&
+                                                ` by ${share.reviewer_name}`}
+                                            {share.decision_note && (
+                                                <span className="block font-normal text-muted-foreground">
+                                                    “{share.decision_note}”
+                                                </span>
+                                            )}
+                                        </span>
+                                    )}
                                 </span>
                                 <Button
                                     variant="ghost"

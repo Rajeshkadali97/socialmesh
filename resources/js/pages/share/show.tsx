@@ -2,8 +2,9 @@ import { Head } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 
 import { PostPreview, StatusChip } from '@/components/posts/post-preview';
+import { ShareReviewPanel } from '@/components/posts/share-review-panel';
 import { dayjs } from '@/lib/datetime/dayjs';
-import type { PublicPostView } from '@/types/share';
+import type { PublicPostView, ShareReview } from '@/types/share';
 
 /* -------------------------------------------------------------------------- */
 /* Atmosphere                                                                  */
@@ -220,9 +221,11 @@ function ShareHero({ post }: { post: PublicPostView }) {
 
 type Props = {
     post: PublicPostView | null;
+    review: ShareReview | null;
 };
 
-export default function ShareShow({ post }: Props) {
+export default function ShareShow({ post, review }: Props) {
+    const token = window.location.pathname.split('/').pop() ?? '';
     return (
         <>
             <Head>
@@ -235,6 +238,9 @@ export default function ShareShow({ post }: Props) {
                     <main className="mx-auto max-w-3xl px-5 pt-12 pb-4 sm:px-8 sm:pt-16">
                         <ShareHero post={post} />
                         <PostPreview post={post} className="mt-8" />
+                        {review && (
+                            <ShareReviewPanel token={token} initial={review} />
+                        )}
                     </main>
                 )}
             </ShareShell>

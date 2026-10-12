@@ -41,4 +41,20 @@ class ShareService
     {
         return url("/share/{$token}");
     }
+
+    /**
+     * Record the client's verdict on a shared post. A later verdict from the same
+     * link replaces the earlier one, so a client can approve after a revision.
+     */
+    public function decide(PostShare $share, string $decision, ?string $reviewerName, ?string $note): PostShare
+    {
+        $share->forceFill([
+            'decision' => $decision,
+            'decision_note' => $decision === 'changes_requested' ? $note : null,
+            'reviewer_name' => $reviewerName,
+            'decided_at' => now(),
+        ])->save();
+
+        return $share;
+    }
 }
