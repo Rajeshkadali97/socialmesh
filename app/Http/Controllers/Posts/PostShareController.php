@@ -29,6 +29,10 @@ class PostShareController extends Controller
                 'id' => $s->id,
                 'expires_at' => $s->expires_at?->toIso8601String(),
                 'created_at' => $s->created_at->toIso8601String(),
+                'decision' => $s->decision,
+                'decision_note' => $s->decision_note,
+                'reviewer_name' => $s->reviewer_name,
+                'decided_at' => $s->decided_at?->toIso8601String(),
             ]);
 
         return response()->json($rows);

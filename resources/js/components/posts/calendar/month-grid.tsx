@@ -145,8 +145,7 @@ function DayCell({
             className={cn(
                 'group/day relative min-h-[72px] bg-background p-1.5 transition-colors sm:min-h-[96px]',
                 'focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none',
-                isPast && 'bg-muted/40',
-                isToday && 'bg-primary/5',
+                isToday && 'bg-brand-orange/10',
                 canCreatePost && 'cursor-pointer hover:bg-accent/40',
                 isOver && 'ring-2 ring-primary/60 ring-inset',
             )}

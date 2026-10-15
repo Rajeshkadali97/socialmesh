@@ -362,7 +362,6 @@ test('base reply lookup reuses the remote reply index for one collection', funct
     };
 
     $method = new ReflectionMethod(EngagementController::class, 'baseReplyFor');
-    $method->setAccessible(true);
 
     $controller = app(EngagementController::class);
 

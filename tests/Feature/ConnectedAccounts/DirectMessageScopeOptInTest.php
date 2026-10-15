@@ -9,6 +9,14 @@ use App\Models\Workspace;
 use App\Models\WorkspaceMembership;
 use Illuminate\Support\Facades\Http;
 
+beforeEach(function () {
+    // The post-connect DM backfill lists conversations; keep it off the real network.
+    Http::fake([
+        'graph.facebook.com/*/conversations*' => Http::response(['data' => []]),
+        'bsky.social/xrpc/chat.bsky.convo.listConvos*' => Http::response(['convos' => []]),
+    ]);
+});
+
 // ownerActingIn() + fakeOAuthUser() are shared helpers defined in tests/Pest.php.
 
 test('x scopes include dm scopes when direct messages enabled', function () {

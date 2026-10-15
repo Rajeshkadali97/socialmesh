@@ -17,9 +17,9 @@ class AccountMetricFactory extends Factory
         return [
             'connected_account_id' => ConnectedAccount::factory(),
             'captured_at' => Date::now(),
-            'followers' => $this->faker->numberBetween(0, 10000),
-            'following' => $this->faker->numberBetween(0, 1000),
-            'posts_count' => $this->faker->numberBetween(0, 500),
+            'followers' => fake()->numberBetween(0, 10000),
+            'following' => fake()->numberBetween(0, 1000),
+            'posts_count' => fake()->numberBetween(0, 500),
             'raw' => null,
         ];
     }

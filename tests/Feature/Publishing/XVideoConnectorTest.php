@@ -46,7 +46,7 @@ test('still-processing video returns MediaProcessing and persists the media id',
 
     $state = $target->fresh()->media_upload_state;
     expect($state)->not->toBeNull()->and(array_key_first($state))->not->toBeNull();
-    $entry = $state[array_key_first($state)];
+    $entry = array_first($state);
     expect($entry['remote_ref'])->toBe('99')
         ->and($entry['state'])->toBe('processing');
     Http::assertSent(fn ($request): bool => $request->method() === 'GET'

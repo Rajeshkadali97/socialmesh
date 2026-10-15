@@ -155,7 +155,7 @@ function bindConnector(PublishResult|callable $result): void
 
     app()->instance(PublishConnectorRegistry::class, new class($connector) extends PublishConnectorRegistry
     {
-        public function __construct(private PublishConnector $connector) {}
+        public function __construct(private readonly PublishConnector $connector) {}
 
         public function for(Platform $platform): PublishConnector
         {

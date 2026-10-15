@@ -22,8 +22,8 @@ const toneStyles: Record<
     { chip: string; strip: string; pulse: boolean }
 > = {
     scheduled: {
-        chip: 'bg-sky-500/10 text-sky-700 hover:bg-sky-500/15 dark:bg-sky-400/15 dark:text-sky-200 dark:hover:bg-sky-400/20',
-        strip: 'bg-sky-500 dark:bg-sky-400',
+        chip: 'bg-brand-green/10 text-brand-green hover:bg-brand-green/15',
+        strip: 'bg-brand-green',
         pulse: false,
     },
     published: {

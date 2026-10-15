@@ -20,8 +20,12 @@ use Override;
  * @property string $token_hash
  * @property CarbonImmutable|null $expires_at
  * @property CarbonImmutable|null $revoked_at
+ * @property string|null $decision approved|changes_requested, set by the client reviewing the link
+ * @property string|null $decision_note
+ * @property string|null $reviewer_name
+ * @property CarbonImmutable|null $decided_at
  */
-#[Fillable(['post_id', 'created_by', 'token_hash', 'expires_at', 'revoked_at'])]
+#[Fillable(['post_id', 'created_by', 'token_hash', 'expires_at', 'revoked_at', 'decision', 'decision_note', 'reviewer_name', 'decided_at'])]
 class PostShare extends Model
 {
     /** @use HasFactory<PostShareFactory> */
@@ -30,7 +34,7 @@ class PostShare extends Model
     #[Override]
     protected function casts(): array
     {
-        return ['expires_at' => 'datetime', 'revoked_at' => 'datetime'];
+        return ['expires_at' => 'datetime', 'revoked_at' => 'datetime', 'decided_at' => 'datetime'];
     }
 
     /** @return BelongsTo<Post, $this> */

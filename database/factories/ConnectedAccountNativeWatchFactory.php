@@ -8,12 +8,14 @@ use App\Models\ConnectedAccount;
 use App\Models\ConnectedAccountNativeWatch;
 use App\Models\Workspace;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Override;
 
 /**
  * @extends Factory<ConnectedAccountNativeWatch>
  */
 class ConnectedAccountNativeWatchFactory extends Factory
 {
+    #[Override]
     protected $model = ConnectedAccountNativeWatch::class;
 
     /**

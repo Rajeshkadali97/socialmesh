@@ -33,13 +33,11 @@ const STATUS_CHIP: Record<string, { label: string; className: string }> = {
     },
     scheduled: {
         label: 'Scheduled',
-        className:
-            'bg-blue-500/10 text-blue-600 dark:text-blue-400 ring-blue-500/20',
+        className: 'bg-brand-green/10 text-brand-green ring-brand-green/20',
     },
     publishing: {
         label: 'Publishing',
-        className:
-            'bg-blue-500/10 text-blue-600 dark:text-blue-400 ring-blue-500/20',
+        className: 'bg-brand-green/10 text-brand-green ring-brand-green/20',
     },
     draft: {
         label: 'Draft',

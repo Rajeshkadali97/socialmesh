@@ -14,6 +14,7 @@ import {
     CreditCard,
     Inbox,
     KeyRound,
+    LayoutGrid,
     ListChecks,
     MessageCircle,
     MessageSquare,
@@ -57,6 +58,7 @@ import { dashboard } from '@/routes';
 import { index as accountsRoute } from '@/routes/accounts';
 import { index as analyticsRoute } from '@/routes/analytics';
 import { index as calendarRoute } from '@/routes/calendar';
+import { index as clientsRoute } from '@/routes/clients';
 import { index as engagementRoute } from '@/routes/engagement';
 import { index as messagesRoute } from '@/routes/messages';
 import { index as postsRoute } from '@/routes/posts';
@@ -86,6 +88,7 @@ const instanceSettingsIcons: Record<InstanceSettingsNavKey, IconComponent> = {
 };
 
 const postsNavItems: NavItem[] = [
+    { title: 'Clients', href: clientsRoute(), icon: LayoutGrid },
     { title: 'Posts', href: postsRoute(), icon: Inbox },
     { title: 'Calendar', href: calendarRoute(), icon: CalendarDays },
     {
@@ -197,6 +200,9 @@ export function AppSidebar() {
                             {postsNavItems
                                 .filter(
                                     (item) =>
+                                        (item.title !== 'Clients' ||
+                                            (workspaces.all?.length ?? 0) >
+                                                1) &&
                                         (item.title !== 'Engagement' ||
                                             features?.engagement) &&
                                         (item.title !== 'Messages' ||

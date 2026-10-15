@@ -24,6 +24,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 class XDirectMessageConnector implements DirectMessageConnector
 {
@@ -106,16 +107,14 @@ class XDirectMessageConnector implements DirectMessageConnector
             $counterpart = $counterparts[$convoId] ?? null;
             $user = $counterpart !== null ? $users->get($counterpart) : null;
 
-            $messages = array_map(function (array $e): FetchedMessage {
-                return new FetchedMessage(
-                    remoteMessageId: (string) $e['event']['id'],
-                    direction: $e['inbound'] ? MessageDirection::Inbound : MessageDirection::Outbound,
-                    authorRemoteId: $e['senderId'],
-                    text: $e['event']['text'] ?? null,
-                    attachments: [],
-                    remoteCreatedAt: CarbonImmutable::parse($e['event']['created_at']),
-                );
-            }, $events);
+            $messages = array_map(fn (array $e): FetchedMessage => new FetchedMessage(
+                remoteMessageId: (string) $e['event']['id'],
+                direction: $e['inbound'] ? MessageDirection::Inbound : MessageDirection::Outbound,
+                authorRemoteId: $e['senderId'],
+                text: $e['event']['text'] ?? null,
+                attachments: [],
+                remoteCreatedAt: CarbonImmutable::parse($e['event']['created_at']),
+            ), $events);
 
             $conversations[] = new FetchedConversation(
                 remoteConversationId: $convoId,
@@ -464,7 +463,7 @@ class XDirectMessageConnector implements DirectMessageConnector
  *
  * @internal
  */
-final class XDirectMessageMediaFailed extends \RuntimeException
+final class XDirectMessageMediaFailed extends RuntimeException
 {
     public function __construct(public readonly Response $response)
     {
@@ -480,7 +479,7 @@ final class XDirectMessageMediaFailed extends \RuntimeException
  *
  * @internal
  */
-final class XDirectMessageMediaPending extends \RuntimeException
+final class XDirectMessageMediaPending extends RuntimeException
 {
     public function __construct(public readonly int $retryAfterSeconds)
     {

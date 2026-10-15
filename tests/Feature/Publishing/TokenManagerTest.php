@@ -589,3 +589,17 @@ test('fresh flags the bluesky account for attention when both refresh and login 
 
     expect($account->fresh()->status)->toBe(ConnectedAccountStatus::NeedsAttention);
 });
+
+test('fresh reports missing stored credentials as a token refresh failure, not a raw model exception', function () {
+    $account = ConnectedAccount::factory()->create([
+        'platform' => Platform::X->value,
+        'token_expires_at' => now()->addHour(),
+    ]);
+
+    Http::fake();
+
+    expect(fn () => app(TokenManager::class)->fresh($account->fresh()))
+        ->toThrow(TokenRefreshException::class, 'Reconnect the account');
+
+    Http::assertNothingSent();
+});

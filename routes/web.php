@@ -1,26 +1,32 @@
 <?php
 
+use App\Http\Controllers\ClientOverviewController;
 use App\Http\Controllers\CommandSearchController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Gifs\GifBrowserController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PublicShareController;
+use App\Http\Controllers\PublicShareDecisionController;
 use App\Http\Controllers\WorkspaceMentionController;
 use App\Http\Middleware\NoIndex;
 use App\Services\Gifs\KlipyClient;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect()->route(auth()->check() ? 'dashboard' : 'login');
-})->name('home');
+Route::get('/', fn () => redirect()->route(auth()->check() ? 'dashboard' : 'login'))->name('home');
 
 Route::get('/share/{token}', [PublicShareController::class, 'show'])
     ->middleware([NoIndex::class, 'throttle:30,1'])
     ->name('share.show')
     ->where('token', '[A-Za-z0-9\-]+');
 
+Route::post('/share/{token}/decision', [PublicShareDecisionController::class, 'store'])
+    ->middleware([NoIndex::class, 'throttle:20,1'])
+    ->name('share.decision')
+    ->where('token', '[A-Za-z0-9\-]+');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('clients', [ClientOverviewController::class, 'index'])->name('clients.index');
     Route::post('workspace-mentions', [WorkspaceMentionController::class, 'store'])->name('workspace-mentions.store');
     Route::delete('workspace-mentions/{workspaceMention}', [WorkspaceMentionController::class, 'destroy'])->name('workspace-mentions.destroy');
 

@@ -10,15 +10,15 @@ use App\Enums\PostTargetStatus;
 use App\Jobs\RepostPostTarget;
 use App\Models\PostTarget;
 use App\Services\Repost\RepostEligibility;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Date;
 
+#[Description('Fan out auto-repost jobs for due, well-performing published targets.')]
+#[Signature('posts:dispatch-due-reposts')]
 class DispatchDueReposts extends Command
 {
-    protected $signature = 'posts:dispatch-due-reposts';
-
-    protected $description = 'Fan out auto-repost jobs for due, well-performing published targets.';
-
     public function handle(RepostEligibility $eligibility): int
     {
         if (! config('repost.enabled')) {

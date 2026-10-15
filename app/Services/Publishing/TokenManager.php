@@ -52,6 +52,23 @@ class TokenManager
     ) {}
 
     /**
+     * Load the account's stored credentials, or fail as a revoked credential
+     * (not a raw "no query results" model exception) when the secret row is gone.
+     *
+     * @throws TokenRefreshException
+     */
+    private function secretFor(ConnectedAccount $account): ConnectedAccountSecret
+    {
+        $secret = $account->secret()->first();
+
+        if (! $secret instanceof ConnectedAccountSecret) {
+            throw new TokenRefreshException('Stored credentials for this account are missing. Reconnect the account to continue.');
+        }
+
+        return $secret;
+    }
+
+    /**
      * Resolve usable credentials for an account, refreshing the OAuth token when it
      * is expired/near-expiry. The proactive sweeper passes `force: true` to refresh
      * every account inside its (wider) window, ahead of the just-in-time skew band.
@@ -60,7 +77,7 @@ class TokenManager
      */
     public function fresh(ConnectedAccount $account, bool $force = false): array
     {
-        $secret = $account->secret()->firstOrFail();
+        $secret = $this->secretFor($account);
 
         if ($account->platform === Platform::Bluesky && $account->auth_method === 'app_password') {
             return $this->blueskyCredentials($account, $force);
@@ -99,7 +116,7 @@ class TokenManager
         return Cache::lock("connected-account-token-refresh:{$account->id}", self::REFRESH_LOCK_SECONDS)
             ->block(10, function () use ($account, $force): array {
                 $freshAccount = $account->newQueryWithoutScopes()->findOrFail($account->id);
-                $freshSecret = $freshAccount->secret()->firstOrFail();
+                $freshSecret = $this->secretFor($freshAccount);
 
                 if (! $force && ! $this->needsRefresh($freshAccount)) {
                     return ['access_token' => $freshSecret->access_token];
@@ -143,7 +160,7 @@ class TokenManager
         return Cache::lock("connected-account-token-refresh:{$account->id}", self::REFRESH_LOCK_SECONDS)
             ->block(10, function () use ($account, $force): array {
                 $freshAccount = $account->newQueryWithoutScopes()->findOrFail($account->id);
-                $freshSecret = $freshAccount->secret()->firstOrFail();
+                $freshSecret = $this->secretFor($freshAccount);
 
                 if (! $force && ! $this->needsRefresh($freshAccount)) {
                     return $this->blueskyOAuthPayload($freshSecret);
@@ -169,7 +186,7 @@ class TokenManager
         return Cache::lock("connected-account-token-refresh:{$account->id}", self::REFRESH_LOCK_SECONDS)
             ->block(10, function () use ($account, $force): array {
                 $freshAccount = $account->newQueryWithoutScopes()->findOrFail($account->id);
-                $freshSecret = $freshAccount->secret()->firstOrFail();
+                $freshSecret = $this->secretFor($freshAccount);
 
                 if (! $force && ! $this->needsRefresh($freshAccount)) {
                     return ['access_token' => $freshSecret->access_token];
@@ -235,7 +252,7 @@ class TokenManager
     private function blueskyCredentials(ConnectedAccount $account, bool $force): array
     {
         if (! $force && $this->refreshedRecently($account)) {
-            $secret = $account->secret()->firstOrFail();
+            $secret = $this->secretFor($account);
 
             return ['session' => $secret->session ?? [], 'app_password' => $secret->app_password];
         }
@@ -244,7 +261,7 @@ class TokenManager
             return Cache::lock("connected-account-token-refresh:{$account->id}", self::REFRESH_LOCK_SECONDS)
                 ->block(10, function () use ($account, $force): array {
                     $freshAccount = $account->newQueryWithoutScopes()->findOrFail($account->id);
-                    $freshSecret = $freshAccount->secret()->firstOrFail();
+                    $freshSecret = $this->secretFor($freshAccount);
 
                     // Re-check under the lock: the winner rotated, so everyone else reuses it.
                     if (! $force && $this->refreshedRecently($freshAccount)) {
@@ -260,7 +277,7 @@ class TokenManager
             // restoring the never-throw contract this path had before it was serialized.
             // The holder saves the rotated tokens before releasing, so the re-read is at
             // worst marginally stale and the publish proceeds with a valid session.
-            $freshSecret = $account->secret()->firstOrFail();
+            $freshSecret = $this->secretFor($account);
 
             return ['session' => $freshSecret->session ?? [], 'app_password' => $freshSecret->app_password];
         }

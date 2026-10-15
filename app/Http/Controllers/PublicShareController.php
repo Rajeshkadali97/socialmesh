@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Services\Posts\ShareReview;
 use App\Services\Posts\ShareService;
 use App\Support\PublicPostView;
 use Inertia\Inertia;
@@ -26,6 +27,13 @@ class PublicShareController extends Controller
 
         return Inertia::render('share/show', [
             'post' => $post !== null ? PublicPostView::make($post) : null,
+            'review' => $post !== null ? [
+                'can_review' => in_array($post->status, ShareReview::REVIEWABLE, true),
+                'decision' => $share->decision,
+                'note' => $share->decision_note,
+                'reviewer_name' => $share->reviewer_name,
+                'decided_at' => $share->decided_at?->toIso8601String(),
+            ] : null,
         ]);
     }
 }

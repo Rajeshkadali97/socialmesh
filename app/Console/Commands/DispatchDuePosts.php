@@ -7,15 +7,15 @@ namespace App\Console\Commands;
 use App\Enums\PostStatus;
 use App\Models\Post;
 use App\Services\Publishing\PublishDispatcher;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Date;
 
+#[Description('Claim due scheduled posts and dispatch their per-target publish jobs.')]
+#[Signature('posts:dispatch-due')]
 class DispatchDuePosts extends Command
 {
-    protected $signature = 'posts:dispatch-due';
-
-    protected $description = 'Claim due scheduled posts and dispatch their per-target publish jobs.';
-
     public function handle(PublishDispatcher $dispatcher): int
     {
         $now = Date::now();

@@ -20,7 +20,7 @@ test('successful publish marks the target published with remote ids', function (
     $target = publishTarget(['one', 'two']);
     bindConnector(PublishResult::success(['111', '222']));
 
-    (new PublishPostTarget($target))->handle(
+    new PublishPostTarget($target)->handle(
         app(PublishConnectorRegistry::class),
         app(TokenManager::class),
         app(PostStatusRollup::class),
@@ -42,7 +42,7 @@ test('retryable failure schedules a retry and re-dispatches', function () {
     $target = publishTarget();
     bindConnector(PublishResult::failure(ErrorKind::RateLimited, 'slow', 429));
 
-    (new PublishPostTarget($target))->handle(
+    new PublishPostTarget($target)->handle(
         app(PublishConnectorRegistry::class),
         app(TokenManager::class),
         app(PostStatusRollup::class),
@@ -66,7 +66,7 @@ test('rate limited retry honors the provider retry-after delay', function () {
     Date::setTestNow(now()->startOfSecond());
     $expected = now()->addSeconds(900);
 
-    (new PublishPostTarget($target))->handle(
+    new PublishPostTarget($target)->handle(
         app(PublishConnectorRegistry::class),
         app(TokenManager::class),
         app(PostStatusRollup::class),
@@ -76,9 +76,7 @@ test('rate limited retry honors the provider retry-after delay', function () {
     $target->refresh();
     expect($target->next_attempt_at->equalTo($expected))->toBeTrue();
 
-    Bus::assertDispatched(PublishPostTarget::class, function (PublishPostTarget $job): bool {
-        return $job->delay === 900;
-    });
+    Bus::assertDispatched(PublishPostTarget::class, fn (PublishPostTarget $job): bool => $job->delay === 900);
 
     Date::setTestNow();
 });
@@ -88,7 +86,7 @@ test('terminal failure marks the target failed without retry', function () {
     $target = publishTarget();
     bindConnector(PublishResult::failure(ErrorKind::Validation, 'bad', 400));
 
-    (new PublishPostTarget($target))->handle(
+    new PublishPostTarget($target)->handle(
         app(PublishConnectorRegistry::class),
         app(TokenManager::class),
         app(PostStatusRollup::class),
@@ -114,7 +112,7 @@ test('publish fails immediately when the account already needs attention', funct
 
     bindConnector(fn () => throw new RuntimeException('connector should not be called'));
 
-    (new PublishPostTarget($target))->handle(
+    new PublishPostTarget($target)->handle(
         app(PublishConnectorRegistry::class),
         app(TokenManager::class),
         app(PostStatusRollup::class),
@@ -160,7 +158,7 @@ test('auth expired result refreshes credentials once and retries the connector',
             : PublishResult::success(['111']);
     });
 
-    (new PublishPostTarget($target))->handle(
+    new PublishPostTarget($target)->handle(
         app(PublishConnectorRegistry::class),
         app(TokenManager::class),
         app(PostStatusRollup::class),
@@ -187,7 +185,7 @@ test('auth expired after the recovery refresh marks the target failed without re
     ]);
     bindConnector(PublishResult::failure(ErrorKind::AuthExpired, 'Unauthorized', 401));
 
-    (new PublishPostTarget($target))->handle(
+    new PublishPostTarget($target)->handle(
         app(PublishConnectorRegistry::class),
         app(TokenManager::class),
         app(PostStatusRollup::class),
@@ -221,7 +219,7 @@ test('a transient refresh failure retries the publish without flipping the accou
     ]);
     bindConnector(PublishResult::failure(ErrorKind::AuthExpired, 'Unauthorized', 401));
 
-    (new PublishPostTarget($target))->handle(
+    new PublishPostTarget($target)->handle(
         app(PublishConnectorRegistry::class),
         app(TokenManager::class),
         app(PostStatusRollup::class),
@@ -243,7 +241,7 @@ test('retry stops after five attempts', function () {
     $target->forceFill(['attempts' => 4])->save();
     bindConnector(PublishResult::failure(ErrorKind::ServerError, 'boom', 500));
 
-    (new PublishPostTarget($target))->handle(
+    new PublishPostTarget($target)->handle(
         app(PublishConnectorRegistry::class),
         app(TokenManager::class),
         app(PostStatusRollup::class),
@@ -303,7 +301,7 @@ test('failed() reconciles a fully-posted target to published (orphaned redeliver
         'started_at' => now(),
     ]);
 
-    (new PublishPostTarget($target->fresh()))->failed(
+    new PublishPostTarget($target->fresh())->failed(
         new MaxAttemptsExceededException('App\Jobs\PublishPostTarget has been attempted too many times.'),
     );
 
@@ -338,7 +336,7 @@ test('failed() resumes a partially-posted thread instead of failing it', functio
         'started_at' => now(),
     ]);
 
-    (new PublishPostTarget($target->fresh()))->failed(new RuntimeException('worker killed mid-thread'));
+    new PublishPostTarget($target->fresh())->failed(new RuntimeException('worker killed mid-thread'));
 
     $target->refresh();
     expect($target->status)->toBe(PostTargetStatus::Publishing)
@@ -361,7 +359,7 @@ test('failed() gives up on a partial thread once the attempt budget is exhausted
         'remote_id' => '111',
     ])->save();
 
-    (new PublishPostTarget($target->fresh()))->failed(new RuntimeException('still broken'));
+    new PublishPostTarget($target->fresh())->failed(new RuntimeException('still broken'));
 
     expect($target->refresh()->status)->toBe(PostTargetStatus::Failed);
     Bus::assertNotDispatched(PublishPostTarget::class);
@@ -378,7 +376,7 @@ test('failed() is a no-op when the target already reached a terminal state', fun
         'remote_id' => '111',
     ])->save();
 
-    (new PublishPostTarget($target->fresh()))->failed(
+    new PublishPostTarget($target->fresh())->failed(
         new MaxAttemptsExceededException('App\Jobs\PublishPostTarget has been attempted too many times.'),
     );
 
@@ -390,7 +388,7 @@ test('failed() with no posted segments marks the target failed', function () {
     $target = publishTarget(['one']);
     $target->forceFill(['status' => PostTargetStatus::Publishing->value])->save();
 
-    (new PublishPostTarget($target->fresh()))->failed(new RuntimeException('boom'));
+    new PublishPostTarget($target->fresh())->failed(new RuntimeException('boom'));
 
     $target->refresh();
     expect($target->status)->toBe(PostTargetStatus::Failed)
@@ -417,7 +415,7 @@ test('handle is a no-op on a terminal published target (stale retry / double dis
         throw new RuntimeException('connector must not be called');
     });
 
-    (new PublishPostTarget($target->fresh()))->handle(
+    new PublishPostTarget($target->fresh())->handle(
         app(PublishConnectorRegistry::class),
         app(TokenManager::class),
         app(PostStatusRollup::class),
@@ -443,7 +441,7 @@ test('thread resumption passes already-posted ids to the connector', function ()
         return PublishResult::success(['111', '222']);
     });
 
-    (new PublishPostTarget($target->fresh()))->handle(
+    new PublishPostTarget($target->fresh())->handle(
         app(PublishConnectorRegistry::class),
         app(TokenManager::class),
         app(PostStatusRollup::class),

@@ -58,7 +58,7 @@ test('a rate-limited first chunk stops further requests and marks every id', fun
     Http::fake(['api.twitter.com/2/tweets/search/recent*' => Http::response(['title' => 'Too Many Requests'], 429, ['Retry-After' => '30'])]);
 
     // Enough conversation ids to span more than one query-length chunk.
-    $ids = array_map('strval', range(1, 40));
+    $ids = array_map(strval(...), range(1, 40));
     $out = xBatchConnector()->fetchRepliesForConversations(xBatchAccount(), $ids, ['access_token' => 't'], null);
 
     Http::assertSentCount(1);

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\PostStatus;
 use App\Models\Post;
 use App\Models\Workspace;
 use App\Models\WorkspaceMention;
+use App\Support\ClientOverview;
 use App\Support\Onboarding\OnboardingPresenter;
 use App\Support\PostListItem;
 use Illuminate\Http\Request;
@@ -24,6 +26,17 @@ class DashboardController extends Controller
         $workspace = $user?->currentWorkspace;
 
         return Inertia::render('dashboard', [
+            // A closure, so partial reloads that don't ask for it skip the aggregates.
+            'weekStats' => function () use ($user): ?array {
+                $current = collect(ClientOverview::make($user))->firstWhere('id', $user->current_workspace_id);
+
+                return $current === null ? null : [
+                    'scheduled_next_7_days' => $current['posts']['next_7_days'],
+                    'published_last_7_days' => $current['posts']['published_7_days'],
+                    'drafts' => Post::query()->where('status', PostStatus::Draft->value)->count(),
+                    'needs_attention' => $current['posts']['problems'] + $current['accounts']['needs_attention'],
+                ];
+            },
             'onboarding' => $workspace instanceof Workspace
                 ? OnboardingPresenter::make($workspace, $user)
                 : null,

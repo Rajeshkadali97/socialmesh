@@ -34,6 +34,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 class BlueskyPublishConnector implements PublishConnector, RepostConnector
 {
@@ -496,7 +497,7 @@ class BlueskyPublishConnector implements PublishConnector, RepostConnector
      */
     private function videoEmbed(PublishContext $context, PostMedia $media, ?string $presentation = null): array
     {
-        $blob = (new MediaUploadState($context->target->media_upload_state))->blob($media->id);
+        $blob = new MediaUploadState($context->target->media_upload_state)->blob($media->id);
 
         $embed = ['$type' => 'app.bsky.embed.video', 'video' => $blob];
 
@@ -750,7 +751,7 @@ class BlueskyPublishConnector implements PublishConnector, RepostConnector
  *
  * @internal
  */
-final class BlueskyRequestFailed extends \RuntimeException
+final class BlueskyRequestFailed extends RuntimeException
 {
     public function __construct(public readonly Response $response)
     {
@@ -763,4 +764,4 @@ final class BlueskyRequestFailed extends \RuntimeException
  *
  * @internal
  */
-final class BlueskyValidationFailed extends \RuntimeException {}
+final class BlueskyValidationFailed extends RuntimeException {}

@@ -8,7 +8,7 @@ use App\Models\PostMedia;
 
 final class SegmentMediaResolver
 {
-    public const HEAD = '__head__';
+    public const string HEAD = '__head__';
 
     /**
      * @param  list<string>  $sections
@@ -38,9 +38,7 @@ final class SegmentMediaResolver
         // authored segment index -> first section index that survived the split.
         $firstSectionForAuthored = [];
         foreach ($sectionSources as $sectionIndex => $authored) {
-            if (! isset($firstSectionForAuthored[$authored])) {
-                $firstSectionForAuthored[$authored] = $sectionIndex;
-            }
+            $firstSectionForAuthored[$authored] ??= $sectionIndex;
         }
 
         $ordered = $placements;

@@ -9,12 +9,14 @@ use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
+use Override;
 
 /**
  * @extends Factory<ApiKey>
  */
 class ApiKeyFactory extends Factory
 {
+    #[Override]
     protected $model = ApiKey::class;
 
     public function definition(): array
@@ -23,8 +25,8 @@ class ApiKeyFactory extends Factory
             'workspace_id' => Workspace::factory(),
             'user_id' => User::factory(),
             'access_token_id' => (string) Str::uuid(),
-            'name' => $this->faker->words(2, true),
-            'last_four' => $this->faker->regexify('[A-Za-z0-9]{4}'),
+            'name' => fake()->words(2, true),
+            'last_four' => fake()->regexify('[A-Za-z0-9]{4}'),
             'scope' => 'write',
             'last_used_at' => null,
             'expires_at' => null,

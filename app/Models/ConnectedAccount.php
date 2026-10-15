@@ -11,6 +11,7 @@ use App\Enums\Platform;
 use Carbon\CarbonImmutable;
 use Database\Factories\ConnectedAccountFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -255,7 +256,8 @@ class ConnectedAccount extends Model
     /**
      * @param  Builder<ConnectedAccount>  $query
      */
-    public function scopeEnabled(Builder $query): void
+    #[Scope]
+    protected function enabled(Builder $query): void
     {
         $query->whereNull('disabled_at');
     }

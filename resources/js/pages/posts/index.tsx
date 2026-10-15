@@ -260,7 +260,16 @@ export default function PostsIndex({ posts, filters, sets, counts }: Props) {
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    <div className="ml-auto">
+                    <div className="ml-auto flex items-center gap-2">
+                        <Button
+                            nativeButton={false}
+                            size="sm"
+                            variant="outline"
+                            className="h-8"
+                            render={<Link href="/posts/bulk" />}
+                        >
+                            Bulk schedule
+                        </Button>
                         <Button
                             nativeButton={false}
                             size="sm"

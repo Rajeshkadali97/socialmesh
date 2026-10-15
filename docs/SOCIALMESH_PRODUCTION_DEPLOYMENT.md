@@ -120,6 +120,56 @@ docker compose -f docker-compose.production.yaml ps
 
 To pin a specific build, set `SOCIALMESH_IMAGE_TAG=sha-<full-commit>` in the shell before the Compose commands, or place it in the VPS `.env`. Keep a known-good tag available for rollback.
 
+## Single machine behind a Cloudflare Tunnel (no VPS, no open ports)
+
+Use this when SocialMesh runs on one computer with Docker and is published through a Cloudflare Tunnel on your own domain (for example `social.<your-domain>`). Cloudflare terminates HTTPS; nothing on the machine listens on a public port.
+
+1. Move the domain's DNS to Cloudflare (Free plan) and wait for the site to show Active. Copy every existing MX/TXT record first and keep mail records DNS-only.
+2. In Zero Trust > Networks > Tunnels create a tunnel named `socialmesh`. Add a public hostname `social.<your-domain>` with service `http://app:8080` (the app container on the Compose network; `8082` is only the loopback mapping on the host). Copy the tunnel token into `.env` as `TUNNEL_TOKEN`.
+3. `cp .env.example.prod .env`, then set `APP_KEY`, `APP_URL=https://social.<your-domain>` and `TUNNEL_TOKEN`. Leave `MAIL_MAILER=log` and `INSTANCE_REGISTRATIONS_ENABLED=false`.
+4. Start the stack. `docker-compose.tunnel.yaml` builds the image from this checkout, runs `cloudflared`, and stores media on the local `public` disk:
+
+```sh
+docker compose -f docker-compose.production.yaml -f docker-compose.tunnel.yaml up -d --build
+curl --fail http://127.0.0.1:8082/up
+curl --fail https://social.<your-domain>/up
+```
+
+The one container runs the web app (Octane), the database queue worker, and the scheduler under supervisord (see `docker/supervisord.conf`).
+
+### Owner account and employees
+
+The first account to register becomes the instance owner; registration then closes (`INSTANCE_REGISTRATIONS_ENABLED=false`). To add employees open **Settings > Workspace > Members**, choose **Invite**, and pick `member` or `admin` for that client workspace. Outgoing mail is only logged, so after sending, the page shows a one-time **Invitation link**: copy it and send it to the employee. The link is shown once because only its hash is stored; cancel and re-invite to get a new one.
+
+### Backups
+
+`docker/backup.sh` snapshots the SQLite database and the storage (media) volume and keeps the newest 7 copies of each. Run it nightly from cron or Task Scheduler (WSL/Git Bash on Windows):
+
+```sh
+0 3 * * * cd /path/to/socialmesh && ./docker/backup.sh
+```
+
+Keep a copy off this machine. `docker compose down -v` deletes the volumes; do not use it routinely.
+
+### Media storage and moving to S3/R2 later
+
+Each `post_media` row records the disk its file lives on (`disk`, plus `source_disk` for the pre-edit original). `FileStorage::diskName()` only decides the disk for **new** uploads (`FILESYSTEM_DISK`). With `FILESYSTEM_DISK=public`, files live in the `socialmesh_storage` volume under `storage/app/public` and are served at `${APP_URL}/storage/...`, which Meta can fetch.
+
+To move later without losing old files:
+
+1. Back up with `docker/backup.sh`.
+2. Create the bucket, set the `AWS_*` values and a public `AWS_URL`, and set `FILESYSTEM_DISK=s3`. New uploads now go to S3/R2. Old rows still say `public`, so they keep resolving from the volume; nothing breaks while both exist.
+3. To migrate the old files, copy `storage/app/public` into the bucket with the same relative keys (for example `rclone copy`), then run `UPDATE post_media SET disk = 's3' WHERE disk = 'public'` and the same for `source_disk`. Keep the volume until a few posts have been checked.
+
+### Meta app (development mode)
+
+Add these in the Meta app (Facebook Login for Business / Valid OAuth Redirect URIs, and the Threads app's redirect callback):
+
+- `https://social.<your-domain>/accounts/callback/meta`
+- `https://social.<your-domain>/accounts/callback/threads`
+
+In development mode only people with a role on the Meta app can connect accounts, so every employee and every client who connects a Page needs one: **Tester** is enough to authorise; **Developer** also lets them change app settings. Each client must be an admin of their Page (or grant the connecting person Page *full control*/task access with content and messaging), have their Instagram account set to Professional and linked to that Page, and approve the requested permissions (`pages_show_list`, `pages_manage_posts`, `pages_read_engagement`, `instagram_basic`, `instagram_content_publish`, and the engagement/insights scopes listed in `Platform.php`).
+
 ## Local development
 
 For source editing and Vite HMR, use `docker-compose.dev.yml` as documented in the development setup. The production Compose file is only for the prebuilt GHCR image.

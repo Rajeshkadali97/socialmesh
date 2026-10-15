@@ -2,7 +2,13 @@ import { Deferred, Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef } from 'react';
 
 import Composer from '@/components/compose/composer';
+import { DashboardRail } from '@/components/dashboard/dashboard-rail';
+import { QuickActions } from '@/components/dashboard/quick-actions';
 import { RecentFeed } from '@/components/dashboard/recent-feed';
+import {
+    WeekStats,
+    type WeekStatsData,
+} from '@/components/dashboard/week-stats';
 import { GettingStartedCard } from '@/components/onboarding/getting-started-card';
 import { WelcomeModal } from '@/components/onboarding/welcome-modal';
 import type { PostRowData } from '@/components/posts/post-row';
@@ -26,6 +32,7 @@ type Props = {
     posts?: PostRowData[];
     onboarding: OnboardingData | null;
     savedMentions: WorkspaceMention[];
+    weekStats: WeekStatsData | null;
 };
 
 function timeGreeting(): string {
@@ -66,9 +73,14 @@ function NoAccountsNotice() {
     );
 }
 
-export default function Dashboard({ posts, onboarding, savedMentions }: Props) {
+export default function Dashboard({
+    posts,
+    onboarding,
+    savedMentions,
+    weekStats,
+}: Props) {
     const page = usePage();
-    const { auth, shell, workspaces } = page.props;
+    const { auth, shell, workspaces, features } = page.props;
     const firstName = (auth.user?.name ?? '').split(/\s+/)[0] || 'there';
     const showNoAccountsNotice = shouldShowDashboardNoAccountsNotice(
         shell.accounts,
@@ -112,7 +124,7 @@ export default function Dashboard({ posts, onboarding, savedMentions }: Props) {
     return (
         <>
             <Head title="Dashboard" />
-            <div className="mx-auto w-full max-w-7xl px-4 pt-6 pb-16 sm:px-6">
+            <div className="mx-auto w-full max-w-[88rem] px-4 pt-6 pb-16 sm:px-6">
                 {onboarding && <WelcomeModal welcomed={onboarding.welcomed} />}
                 <h1 className="text-[26px] leading-tight font-semibold tracking-tight">
                     {timeGreeting()},{' '}
@@ -126,25 +138,46 @@ export default function Dashboard({ posts, onboarding, savedMentions }: Props) {
                     Write something new — it autosaves as you go.
                 </p>
 
-                {onboarding && <GettingStartedCard onboarding={onboarding} />}
+                <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+                    <div className="min-w-0">
+                        {weekStats && <WeekStats stats={weekStats} />}
 
-                {showNoAccountsNotice && <NoAccountsNotice />}
+                        <QuickActions multiClient={workspaces.all.length > 1} />
 
-                <Composer
-                    post={null}
-                    accounts={shell.accounts}
-                    sets={shell.sets}
-                    limits={shell.limits}
-                    initialScheduleAt={initialScheduleAt}
-                    initialDestination={initialDestination}
-                    initialSavedMentions={savedMentions}
-                    autoFocusEditor
-                    onSaved={refreshRecentPosts}
-                />
+                        {onboarding && (
+                            <GettingStartedCard onboarding={onboarding} />
+                        )}
 
-                <Deferred data="posts" fallback={<RecentFeedSkeleton />}>
-                    <RecentFeed posts={posts ?? []} />
-                </Deferred>
+                        {showNoAccountsNotice && <NoAccountsNotice />}
+
+                        <Composer
+                            post={null}
+                            accounts={shell.accounts}
+                            sets={shell.sets}
+                            limits={shell.limits}
+                            initialScheduleAt={initialScheduleAt}
+                            initialDestination={initialDestination}
+                            initialSavedMentions={savedMentions}
+                            autoFocusEditor
+                            onSaved={refreshRecentPosts}
+                        />
+
+                        <Deferred
+                            data="posts"
+                            fallback={<RecentFeedSkeleton />}
+                        >
+                            <RecentFeed posts={posts ?? []} />
+                        </Deferred>
+                    </div>
+
+                    <DashboardRail
+                        accounts={shell.accounts}
+                        unreadReplies={shell.unreadReplies}
+                        unreadMessages={shell.unreadMessages}
+                        engagementEnabled={features?.engagement !== false}
+                        messagesEnabled={features?.messages !== false}
+                    />
+                </div>
             </div>
         </>
     );

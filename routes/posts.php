@@ -6,6 +6,7 @@ use App\Enums\PostStatus;
 use App\Http\Controllers\AccountSets\AccountSetController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Gifs\PostGifController;
+use App\Http\Controllers\Posts\BulkScheduleController;
 use App\Http\Controllers\Posts\CalendarController;
 use App\Http\Controllers\Posts\ComposerController;
 use App\Http\Controllers\Posts\NextSlotController;
@@ -61,6 +62,12 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 
     Route::get('posts/next-slot', [NextSlotController::class, 'show'])->name('posts.next-slot');
     Route::get('posts', [PostController::class, 'index'])->name('posts.index');
+    Route::get('posts/bulk', [BulkScheduleController::class, 'show'])->name('posts.bulk');
+    Route::post('posts/bulk/preview', [BulkScheduleController::class, 'preview'])
+        ->middleware('throttle:30,1')->name('posts.bulk.preview');
+    // Each commit downloads up to MAX_ROWS images, so keep the rate low.
+    Route::post('posts/bulk', [BulkScheduleController::class, 'store'])
+        ->middleware('throttle:6,1')->name('posts.bulk.store');
 
     Route::post('posts', [PostController::class, 'store'])->name('posts.store');
     Route::put('posts/{post}', [PostController::class, 'update'])->name('posts.update');
