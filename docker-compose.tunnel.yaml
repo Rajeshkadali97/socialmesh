@@ -1,0 +1,33 @@
+# Run SocialMesh from one machine behind a Cloudflare Tunnel (no open inbound ports).
+# Layer this file on top of the production stack:
+#
+#   docker compose -f docker-compose.production.yaml -f docker-compose.tunnel.yaml up -d --build
+#
+# - app: built from this checkout instead of pulling the (private) GHCR image,
+#   and stores media on the local `public` disk served over the tunnel's HTTPS host.
+# - cloudflared: connects out to Cloudflare using TUNNEL_TOKEN from .env. In the
+#   Zero Trust dashboard, point the tunnel's public hostname at http://app:8080
+#   (the app container's port on the Compose network; 8082 is only the host mapping).
+name: socialmesh
+
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: socialmesh:local
+        pull_policy: never
+        environment:
+            FILESYSTEM_DISK: "${FILESYSTEM_DISK:-public}"
+            MAIL_MAILER: "${MAIL_MAILER:-log}"
+            INSTANCE_REGISTRATIONS_ENABLED: "${INSTANCE_REGISTRATIONS_ENABLED:-false}"
+
+    cloudflared:
+        image: cloudflare/cloudflared:2025.9.1
+        restart: unless-stopped
+        command: tunnel --no-autoupdate run
+        environment:
+            TUNNEL_TOKEN: "${TUNNEL_TOKEN:?Set TUNNEL_TOKEN in .env}"
+        depends_on:
+            app:
+                condition: service_healthy
