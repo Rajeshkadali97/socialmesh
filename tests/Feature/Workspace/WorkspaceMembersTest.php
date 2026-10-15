@@ -34,6 +34,25 @@ test('owner can invite a member', function () {
     ]);
 });
 
+test('inviting a member flashes a copyable join link that matches the emailed token', function () {
+    Notification::fake();
+    [, $owner] = ownerInWorkspace();
+
+    $this->actingAs($owner)->post(route('settings.workspace.invite'), [
+        'email' => 'new@example.com',
+        'role' => 'admin',
+    ])->assertRedirect();
+
+    $link = session('flash.invitationLink');
+
+    expect($link)->toBeString()->toStartWith(url('/invitation/'));
+
+    Notification::assertSentOnDemand(
+        WorkspaceInviteNotification::class,
+        fn ($notification, array $channels, $notifiable) => $notification->toMail($notifiable)->actionUrl === $link,
+    );
+});
+
 test('member cannot invite', function () {
     $workspace = Workspace::factory()->create();
     $member = User::factory()->create(['current_workspace_id' => $workspace->id]);

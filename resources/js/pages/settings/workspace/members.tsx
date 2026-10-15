@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import WorkspaceSettingsController from '@/actions/App/Http/Controllers/Settings/WorkspaceSettingsController';
 import WorkspaceController from '@/actions/App/Http/Controllers/WorkspaceController';
 import Heading from '@/components/common/heading';
+import InvitationLinkReveal from '@/components/settings/invitation-link-reveal';
 import InviteMemberDialog from '@/components/settings/invite-member-dialog';
 import type { Invitation, Member } from '@/components/settings/member-types';
 import MembersTable from '@/components/settings/members-table';
@@ -27,7 +28,7 @@ export default function WorkspaceMembers({
     canManage,
     availableRoles,
 }: Props) {
-    const { workspaces } = usePage().props;
+    const { workspaces, flash } = usePage().props;
     const isOwner = workspaces.current?.role === 'owner';
     const workspaceId = workspaces.current?.id ?? '';
 
@@ -126,6 +127,10 @@ export default function WorkspaceMembers({
                         <InviteMemberDialog availableRoles={availableRoles} />
                     )}
                 </div>
+
+                {flash?.invitationLink && (
+                    <InvitationLinkReveal link={flash.invitationLink} />
+                )}
 
                 <Deferred data="members" fallback={<MembersSkeleton />}>
                     <MembersTable

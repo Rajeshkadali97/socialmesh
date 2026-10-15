@@ -83,6 +83,7 @@ class HandleInertiaRequests extends Middleware
                 'success' => $request->hasSession() ? $request->session()->get('success') : null,
                 'error' => $request->hasSession() ? $request->session()->get('error') : null,
                 'plainTextApiKey' => $request->hasSession() ? $request->session()->get('flash.plainTextApiKey') : null,
+                'invitationLink' => $request->hasSession() ? $request->session()->get('flash.invitationLink') : null,
             ],
             'notifications' => fn (): array => $this->notificationsData($request->user()),
             'features' => [

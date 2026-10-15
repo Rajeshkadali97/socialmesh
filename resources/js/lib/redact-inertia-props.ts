@@ -12,7 +12,7 @@
  */
 
 const SENSITIVE_KEY =
-    /pass(word|wd)?|secret|token|api[-_]?key|access[-_]?key|private[-_]?key|credential|cookie|session|csrf|xsrf|bearer|signature|authorization|webhook|\botp\b|\bpin\b|\bssn\b/i;
+    /pass(word|wd)?|secret|token|api[-_]?key|access[-_]?key|private[-_]?key|credential|invitation[-_]?link|cookie|session|csrf|xsrf|bearer|signature|authorization|webhook|\botp\b|\bpin\b|\bssn\b/i;
 
 const REDACTED = '[redacted]';
 const MAX_DEPTH = 6;

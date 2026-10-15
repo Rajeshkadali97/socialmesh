@@ -169,7 +169,11 @@ class WorkspaceSettingsController extends Controller
                 ->notify(new WorkspaceInviteNotification($invitation, $plain));
         }
 
-        return back()->with('success', 'Invitation sent.');
+        // The token is stored hashed, so the join link can only be shown now. It lets the
+        // owner share it by hand when mail delivery is not configured (e.g. MAIL_MAILER=log).
+        return back()
+            ->with('success', 'Invitation sent.')
+            ->with('flash.invitationLink', route('workspace.invitation', $plain));
     }
 
     public function updateMemberRole(UpdateMemberRoleRequest $request, WorkspaceMembership $membership): RedirectResponse
