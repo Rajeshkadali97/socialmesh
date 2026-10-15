@@ -23,7 +23,7 @@ services:
             INSTANCE_REGISTRATIONS_ENABLED: "${INSTANCE_REGISTRATIONS_ENABLED:-false}"
 
     cloudflared:
-        image: cloudflare/cloudflared:2025.9.1
+        image: cloudflare/cloudflared:2026.10.0
         restart: unless-stopped
         command: tunnel --no-autoupdate run
         environment:
