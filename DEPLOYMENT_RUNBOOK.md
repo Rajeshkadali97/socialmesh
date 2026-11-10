@@ -84,28 +84,32 @@ In the **Cloudflare Zero Trust Dashboard** (`Networks > Tunnels`):
    - **Service Type**: `HTTP`
    - **URL**: `app:8080`
 
-### Step 4: Build & Start SocialMesh Stack
+### Step 4: Start SocialMesh Stack
 
-Always pass `-p socialmesh` and both compose files from `/opt/apps/socialmesh`:
+Always pass `-p socialmesh` and both compose files from `/opt/apps/socialmesh`. To avoid heavy multi-stage Composer/Bun builds on the shared VPS, assemble `socialmesh:local` from prebuilt development artifacts (or pull the prebuilt image) and start `app`:
 
 ```bash
 cd /opt/apps/socialmesh
+# Start the app container on 127.0.0.1:8082 (works even before TUNNEL_TOKEN is set)
 docker compose -p socialmesh \
   -f docker-compose.production.yaml \
   -f docker-compose.tunnel.yaml \
-  up -d --build
+  up -d --no-build app
+
+# Once TUNNEL_TOKEN is set in /opt/apps/socialmesh/.env, start the Cloudflare Tunnel:
+docker compose -p socialmesh \
+  -f docker-compose.production.yaml \
+  -f docker-compose.tunnel.yaml \
+  up -d --no-build cloudflared
 ```
 
 ### Step 5: Initialize Database & Seed 13 Client Workspaces (First Deploy Only)
 
 ```bash
 cd /opt/apps/socialmesh
-docker compose -p socialmesh -f docker-compose.production.yaml -f docker-compose.tunnel.yaml \
-  exec app php artisan migrate --force
-
-# Optional: seed initial agency workspaces
-docker compose -p socialmesh -f docker-compose.production.yaml -f docker-compose.tunnel.yaml \
-  exec app php artisan db:seed --class=AgencyWorkspacesSeeder --force
+docker exec socialmesh-app php artisan migrate --force
+docker exec socialmesh-app php artisan db:seed --class="Database\\Seeders\\DefaultUserSeeder" --force
+docker exec socialmesh-app php artisan db:seed --class="Database\\Seeders\\AgencyWorkspacesSeeder" --force
 ```
 
 ### Step 6: Post-Deploy Smoke Checks

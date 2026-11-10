@@ -30,7 +30,7 @@ services:
         cpus: 0.25
         command: tunnel --no-autoupdate run
         environment:
-            TUNNEL_TOKEN: "${TUNNEL_TOKEN:?Set TUNNEL_TOKEN in .env}"
+            TUNNEL_TOKEN: "${TUNNEL_TOKEN:-}"
         networks:
             - socialmesh_net
         depends_on:

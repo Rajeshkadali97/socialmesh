@@ -18,6 +18,7 @@ All backend (Pest), frontend (Vitest), static analysis (Larastan + TypeScript), 
 | **JS/TS Linter** | `bun run lint:check` (`oxlint`) | **PASSED** | 439 files checked, 0 warnings, 0 errors |
 | **JS/TS Formatter** | `bun run format` (`oxfmt`) | **PASSED** | 437 files formatted cleanly |
 | **Production Frontend Bundle** | `bun run build` (`vite build`) | **PASSED** | Built cleanly into `public/build/manifest.json` |
+| **VPS Isolated Staging Smoke & E2E Validation** | `138.252.100.129` (`socialmesh-app`) | **VERIFIED** | `GET /up`, `/login`, `/dashboard`, `/clients`, `/posts`, `/accounts`, `/queue`, `/analytics`, `/settings/instance/platforms`, `/media/{media}/raw` all `200 OK`; backup script & restart recovery verified |
 
 ---
 
