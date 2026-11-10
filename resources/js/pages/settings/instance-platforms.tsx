@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 
 import InstanceSettingsController from '@/actions/App/Http/Controllers/Settings/InstanceSettingsController';
 import Heading from '@/components/common/heading';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -20,14 +21,31 @@ type PlatformToggle = {
     configured: boolean;
 };
 
+type StorageSummary = {
+    default_disk: string;
+    publishing_disk: string;
+    archive_disk: string | null;
+    r2_configured: boolean;
+    google_drive: {
+        connected: boolean;
+        source: string | null;
+        email: string | null;
+        root_folder_id: string;
+        archive_enabled: boolean;
+        oauth_configured: boolean;
+    };
+};
+
 type Props = {
     platforms: PlatformToggle[];
     linkedin_community_management_enabled: boolean;
+    storage?: StorageSummary;
 };
 
 export default function InstancePlatforms({
     platforms,
     linkedin_community_management_enabled,
+    storage,
 }: Props) {
     function save(overrides: {
         platforms?: Record<string, boolean>;
@@ -147,6 +165,91 @@ export default function InstancePlatforms({
                         </div>
                     </CardContent>
                 </Card>
+
+                {storage && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>
+                                Media storage &amp; Google Drive archive
+                            </CardTitle>
+                            <CardDescription>
+                                Original assets can be archived to Google Drive
+                                by client and campaign while Cloudflare R2 or
+                                the public disk serves stable HTTPS URLs for
+                                Meta publishing.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4 text-sm">
+                            <div className="grid gap-3 sm:grid-cols-3">
+                                <div className="rounded-lg border border-border p-3">
+                                    <div className="text-xs text-muted-foreground">
+                                        Primary disk
+                                    </div>
+                                    <div className="mt-1 font-medium">
+                                        {storage.default_disk}
+                                    </div>
+                                </div>
+                                <div className="rounded-lg border border-border p-3">
+                                    <div className="text-xs text-muted-foreground">
+                                        Publishing disk (Meta HTTPS)
+                                    </div>
+                                    <div className="mt-1 font-medium">
+                                        {storage.publishing_disk}
+                                        {storage.r2_configured && ' (R2 ready)'}
+                                    </div>
+                                </div>
+                                <div className="rounded-lg border border-border p-3">
+                                    <div className="text-xs text-muted-foreground">
+                                        Google Drive archive
+                                    </div>
+                                    <div className="mt-1 font-medium">
+                                        {storage.google_drive.connected
+                                            ? `Connected${storage.google_drive.email ? ` (${storage.google_drive.email})` : ''}`
+                                            : 'Not connected'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2">
+                                {storage.google_drive.oauth_configured ? (
+                                    <Button
+                                        nativeButton={false}
+                                        size="sm"
+                                        variant="outline"
+                                        render={
+                                            <a href="/settings/instance/storage/google/redirect" />
+                                        }
+                                    >
+                                        {storage.google_drive.connected
+                                            ? 'Reconnect Google Drive'
+                                            : 'Connect Google Drive'}
+                                    </Button>
+                                ) : (
+                                    <span className="text-xs text-muted-foreground">
+                                        Set GOOGLE_DRIVE_CLIENT_ID and
+                                        GOOGLE_DRIVE_CLIENT_SECRET in .env to
+                                        enable Google Drive OAuth.
+                                    </span>
+                                )}
+                                {storage.google_drive.connected &&
+                                    storage.google_drive.source === 'oauth' && (
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() =>
+                                                router.delete(
+                                                    '/settings/instance/storage/google',
+                                                    { preserveScroll: true },
+                                                )
+                                            }
+                                        >
+                                            Disconnect
+                                        </Button>
+                                    )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </>
     );

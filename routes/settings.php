@@ -3,6 +3,7 @@
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\Settings\ApiKeysController;
 use App\Http\Controllers\Settings\ConnectionsController;
+use App\Http\Controllers\Settings\GoogleDriveStorageController;
 use App\Http\Controllers\Settings\InstanceSettingsController;
 use App\Http\Controllers\Settings\NativeTrackingController;
 use App\Http\Controllers\Settings\NotificationPreferencesController;
@@ -52,6 +53,9 @@ Route::middleware(['auth'])->group(function () {
     Route::put('settings/instance/polling', [InstanceSettingsController::class, 'updatePolling'])->name('instance-settings.polling.update');
     Route::get('settings/instance/platforms', [InstanceSettingsController::class, 'platforms'])->name('instance-settings.platforms');
     Route::put('settings/instance/platforms', [InstanceSettingsController::class, 'updatePlatforms'])->name('instance-settings.updatePlatforms');
+    Route::get('settings/instance/storage/google/redirect', [GoogleDriveStorageController::class, 'redirect'])->name('instance-settings.storage.google.redirect');
+    Route::get('settings/instance/storage/google/callback', [GoogleDriveStorageController::class, 'callback'])->name('instance-settings.storage.google.callback');
+    Route::delete('settings/instance/storage/google', [GoogleDriveStorageController::class, 'disconnect'])->name('instance-settings.storage.google.disconnect');
     Route::get('settings/instance/usage', [InstanceSettingsController::class, 'usage'])->name('instance-settings.usage');
     Route::get('settings/instance/usage/x', [InstanceSettingsController::class, 'xUsage'])->name('instance-settings.usage.x');
     Route::put('settings/instance/usage/workspaces/{workspace}/budget', [InstanceSettingsController::class, 'updateWorkspaceBudget'])->name('instance-settings.usage.budget');

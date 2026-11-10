@@ -17,6 +17,10 @@ return [
 
     'public_images' => env('PUBLIC_IMAGES_DISK'),
 
+    'publishing_disk' => env('MEDIA_PUBLISHING_DISK', env('PUBLIC_IMAGES_DISK')),
+
+    'archive_disk' => env('MEDIA_ARCHIVE_DISK', env('GOOGLE_DRIVE_ARCHIVE_ENABLED', false) ? 'google' : null),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
@@ -26,7 +30,7 @@ return [
     | may even configure multiple disks for the same driver. Examples for
     | most supported storage drivers are configured here for reference.
     |
-    | Supported drivers: "local", "ftp", "sftp", "s3"
+    | Supported drivers: "local", "ftp", "sftp", "s3", "google"
     |
     */
 
@@ -67,6 +71,20 @@ return [
             'report' => true,
         ],
 
+        'r2' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID', env('AWS_ACCESS_KEY_ID')),
+            'secret' => env('R2_SECRET_ACCESS_KEY', env('AWS_SECRET_ACCESS_KEY')),
+            'region' => env('R2_DEFAULT_REGION', env('AWS_DEFAULT_REGION', 'auto')),
+            'bucket' => env('R2_BUCKET', env('PUBLIC_IMAGES_BUCKET', env('AWS_BUCKET'))),
+            'url' => env('R2_URL', env('PUBLIC_IMAGES_URL', env('AWS_URL'))),
+            'endpoint' => env('R2_ENDPOINT', env('AWS_ENDPOINT')),
+            'use_path_style_endpoint' => env('R2_USE_PATH_STYLE_ENDPOINT', env('AWS_USE_PATH_STYLE_ENDPOINT', true)),
+            'visibility' => 'public',
+            'throw' => true,
+            'report' => true,
+        ],
+
         'public-images' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
@@ -77,6 +95,20 @@ return [
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'visibility' => 'public',
+            'throw' => true,
+            'report' => true,
+        ],
+
+        'google' => [
+            'driver' => 'google',
+            'client_id' => env('GOOGLE_DRIVE_CLIENT_ID', env('GOOGLE_CLIENT_ID')),
+            'client_secret' => env('GOOGLE_DRIVE_CLIENT_SECRET', env('GOOGLE_CLIENT_SECRET')),
+            'refresh_token' => env('GOOGLE_DRIVE_REFRESH_TOKEN'),
+            'access_token' => env('GOOGLE_DRIVE_ACCESS_TOKEN'),
+            'root_folder_id' => env('GOOGLE_DRIVE_ROOT_FOLDER_ID', 'root'),
+            'root_folder_name' => env('GOOGLE_DRIVE_ROOT_FOLDER_NAME', 'SocialMesh'),
+            'allow_delete' => false,
+            'visibility' => 'private',
             'throw' => true,
             'report' => true,
         ],

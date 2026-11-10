@@ -14,10 +14,14 @@ use App\Models\Workspace;
 use App\Services\Auth\Socialite\ThreadsProvider;
 use App\Services\Media\ImageCompressor;
 use App\Services\Media\ImageToJpegConverter;
+use App\Services\Storage\GoogleDriveClient;
+use App\Services\Storage\GoogleDriveFilesystemAdapter;
+use App\Services\Storage\GoogleDriveTokenProvider;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Authenticated;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Routing\Middleware\ValidateSignature;
 use Illuminate\Support\Facades\Context;
@@ -27,6 +31,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Inertia\ExceptionResponse;
@@ -35,6 +40,7 @@ use Laravel\Cashier\Cashier;
 use Laravel\Passport\Events\AccessTokenCreated;
 use Laravel\Passport\Passport;
 use Laravel\Socialite\Facades\Socialite;
+use League\Flysystem\Filesystem as Flysystem;
 use Override;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Response;
@@ -78,6 +84,22 @@ class AppServiceProvider extends ServiceProvider
             ThreadsProvider::class,
             config('services.threads'),
         ));
+
+        Storage::extend('google', function ($app, array $config): LaravelFilesystemAdapter {
+            $tokens = new GoogleDriveTokenProvider($config);
+            $client = new GoogleDriveClient(
+                tokens: $tokens,
+                rootFolderId: (string) ($config['root_folder_id'] ?? 'root'),
+                allowDelete: (bool) ($config['allow_delete'] ?? false),
+            );
+            $adapter = new GoogleDriveFilesystemAdapter($client);
+
+            return new LaravelFilesystemAdapter(
+                new Flysystem($adapter, $config),
+                $adapter,
+                $config,
+            );
+        });
 
         // OAuth tokens issued for the MCP/API integration. Without explicit
         // lifetimes Passport defaults to ~1 year, so a leaked bearer is

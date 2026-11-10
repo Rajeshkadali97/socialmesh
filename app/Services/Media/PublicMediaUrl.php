@@ -42,6 +42,21 @@ class PublicMediaUrl
             $converted = $this->converter->convert($media);
             $disk = $converted->disk;
             $path = $converted->path;
+        } elseif ($disk === 'google') {
+            $publishingDisk = FileStorage::publishingDiskName();
+            if ($publishingDisk !== 'google') {
+                $stagedPath = 'published/'.ltrim($path, '/');
+                $targetStorage = FileStorage::disk($publishingDisk);
+                if (! $targetStorage->exists($stagedPath)) {
+                    $bytes = FileStorage::disk('google')->get($path);
+                    if ($bytes === null || $bytes === '') {
+                        throw new ImageConversionFailed('Could not stage media from Google Drive for publishing.');
+                    }
+                    $targetStorage->put($stagedPath, $bytes);
+                }
+                $disk = $publishingDisk;
+                $path = $stagedPath;
+            }
         }
 
         return $this->absolute(FileStorage::url($path, $disk));

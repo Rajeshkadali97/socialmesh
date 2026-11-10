@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Media;
 
 use App\Models\PostMedia;
+use App\Support\FileStorage;
 use Illuminate\Support\Facades\Image;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -30,14 +31,16 @@ class ImageToJpegConverter
 
     public function convert(PostMedia $media): ConvertedImage
     {
-        $disk = Storage::disk($media->disk);
+        $sourceDisk = Storage::disk($media->disk);
+        $targetDiskName = $media->disk === 'google' ? FileStorage::publishingDiskName() : $media->disk;
+        $targetDisk = Storage::disk($targetDiskName);
         $derivedPath = $this->derivedPath($media);
 
-        if ($disk->exists($derivedPath)) {
-            return new ConvertedImage($media->disk, $derivedPath);
+        if ($targetDisk->exists($derivedPath)) {
+            return new ConvertedImage($targetDiskName, $derivedPath);
         }
 
-        $bytes = $disk->get($media->path);
+        $bytes = $sourceDisk->get($media->path);
 
         if ($bytes === null || $bytes === '') {
             throw new ImageConversionFailed('Could not read the image to convert it to JPEG.');
@@ -61,9 +64,9 @@ class ImageToJpegConverter
             throw new ImageConversionFailed('Could not convert the image to JPEG.', previous: $e);
         }
 
-        $disk->put($derivedPath, $encoded);
+        $targetDisk->put($derivedPath, $encoded);
 
-        return new ConvertedImage($media->disk, $derivedPath);
+        return new ConvertedImage($targetDiskName, $derivedPath);
     }
 
     private function derivedPath(PostMedia $media): string

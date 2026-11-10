@@ -15,6 +15,8 @@ use App\Models\UsagePeriodCounter;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Billing\WorkspaceSubscriptionGate;
+use App\Services\Storage\GoogleDriveTokenProvider;
+use App\Support\FileStorage;
 use App\Support\InstanceSettings;
 use App\Support\UsagePricing;
 use Carbon\CarbonImmutable;
@@ -119,6 +121,9 @@ class InstanceSettingsController extends Controller
         abort_unless($user?->isInstanceOwner(), 403);
 
         $enabled = $settings->platformsEnabled();
+        $driveProvider = new GoogleDriveTokenProvider((array) config('filesystems.disks.google', []));
+        $r2Configured = trim((string) config('filesystems.disks.r2.bucket', '')) !== ''
+            && trim((string) config('filesystems.disks.r2.key', '')) !== '';
 
         return Inertia::render('settings/instance-platforms', [
             'platforms' => array_map(fn (Platform $platform): array => [
@@ -128,6 +133,17 @@ class InstanceSettingsController extends Controller
                 'configured' => $platform->isConfigured(),
             ], Platform::cases()),
             'linkedin_community_management_enabled' => $settings->linkedinCommunityManagementEnabled(),
+            'storage' => [
+                'default_disk' => (string) config('filesystems.default', 'local'),
+                'publishing_disk' => FileStorage::publishingDiskName(),
+                'archive_disk' => FileStorage::archiveDiskName(),
+                'r2_configured' => $r2Configured,
+                'google_drive' => [
+                    ...$driveProvider->status(),
+                    'oauth_configured' => trim((string) config('services.google_drive.client_id', '')) !== ''
+                        && trim((string) config('services.google_drive.client_secret', '')) !== '',
+                ],
+            ],
         ]);
     }
 

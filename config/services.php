@@ -43,6 +43,17 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'google_drive' => [
+        'client_id' => env('GOOGLE_DRIVE_CLIENT_ID', env('GOOGLE_CLIENT_ID')),
+        'client_secret' => env('GOOGLE_DRIVE_CLIENT_SECRET', env('GOOGLE_CLIENT_SECRET')),
+        'redirect' => env('GOOGLE_DRIVE_REDIRECT_URI'),
+        'refresh_token' => env('GOOGLE_DRIVE_REFRESH_TOKEN'),
+        'root_folder_id' => env('GOOGLE_DRIVE_ROOT_FOLDER_ID', 'root'),
+        'root_folder_name' => env('GOOGLE_DRIVE_ROOT_FOLDER_NAME', 'SocialMesh'),
+        'archive_enabled' => (bool) env('GOOGLE_DRIVE_ARCHIVE_ENABLED', false),
+        'scope' => 'https://www.googleapis.com/auth/drive.file',
+    ],
+
     'x' => [
         'client_id' => env('X_CLIENT_ID'),
         'client_secret' => env('X_CLIENT_SECRET'),
