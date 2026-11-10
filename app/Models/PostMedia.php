@@ -33,6 +33,10 @@ use Override;
  * @property int|null $duration_seconds
  * @property string|null $source_disk
  * @property string|null $source_path
+ * @property string|null $drive_file_id
+ * @property string|null $checksum
+ * @property string|null $campaign
+ * @property string|null $storage_error
  * @property array<string, mixed>|null $edit_settings
  */
 #[Fillable([
@@ -43,6 +47,9 @@ use Override;
     'path',
     'mime',
     'size_bytes',
+    'checksum',
+    'campaign',
+    'storage_error',
     'width',
     'height',
     'alt_text',
@@ -51,6 +58,7 @@ use Override;
     'duration_seconds',
     'source_disk',
     'source_path',
+    'drive_file_id',
     'edit_settings',
 ])]
 #[Table(name: 'post_media')]
@@ -71,18 +79,22 @@ class PostMedia extends Model
     /**
      * Delete the backing file(s) when the row is removed, so storage doesn't
      * accumulate orphans. Covers both the composed file and a retained source.
+     * Original Google Drive files are never deleted automatically.
      */
     protected static function booted(): void
     {
         static::deleting(function (PostMedia $media): void {
-            FileStorage::disk($media->disk)->delete($media->path);
+            if ($media->disk !== 'google') {
+                FileStorage::disk($media->disk)->delete($media->path);
 
-            // Publish-time format conversions (JPEG for Meta, MP4 for GIFs) live
-            // beside the original and would otherwise be left behind.
-            FileStorage::disk($media->disk)->delete(DerivedMedia::pathsFor($media));
+                // Publish-time format conversions (JPEG for Meta, MP4 for GIFs) live
+                // beside the original and would otherwise be left behind.
+                FileStorage::disk($media->disk)->delete(DerivedMedia::pathsFor($media));
+            }
 
-            if ($media->source_path !== null) {
-                FileStorage::disk($media->source_disk ?? $media->disk)->delete($media->source_path);
+            $sourceDisk = $media->source_disk ?? $media->disk;
+            if ($media->source_path !== null && $sourceDisk !== 'google') {
+                FileStorage::disk($sourceDisk)->delete($media->source_path);
             }
         });
     }
@@ -142,7 +154,7 @@ class PostMedia extends Model
      * editors fetch instead of the display URLs, whose storage origin may omit
      * CORS headers. `source_edit_url` is null when no pre-edit source is kept.
      *
-     * @return array{id: string, url: string, mime: string, kind: string, duration_seconds: int|null, alt_text: string|null, position: int, edit_settings: array<string, mixed>|null, source_url: string|null, edit_url: string, source_edit_url: string|null}
+     * @return array{id: string, url: string, mime: string, kind: string, duration_seconds: int|null, alt_text: string|null, position: int, edit_settings: array<string, mixed>|null, source_url: string|null, edit_url: string, source_edit_url: string|null, drive_file_id: string|null, checksum: string|null, campaign: string|null, storage_error: string|null}
      */
     public function toView(): array
     {
@@ -160,6 +172,10 @@ class PostMedia extends Model
             'source_edit_url' => $this->source_path === null
                 ? null
                 : route('media.raw', ['media' => $this, 'variant' => 'source']),
+            'drive_file_id' => $this->drive_file_id,
+            'checksum' => $this->checksum,
+            'campaign' => $this->campaign,
+            'storage_error' => $this->storage_error,
         ];
     }
 

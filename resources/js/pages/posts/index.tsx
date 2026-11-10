@@ -40,8 +40,15 @@ type StatusTab = 'all' | 'scheduled' | 'draft' | 'published' | 'missed';
 
 type Props = {
     posts?: { data: PostRowData[] };
-    filters: { status: string; set: string; platform: string; q: string };
+    filters: {
+        status: string;
+        set: string;
+        platform: string;
+        campaign?: string;
+        q: string;
+    };
     sets: { id: string; name: string }[];
+    campaigns?: string[];
     counts: Record<StatusTab, number>;
 };
 
@@ -54,6 +61,9 @@ const STATUS_TABS: { value: StatusTab; label: string }[] = [
 ];
 
 const PLATFORM_OPTIONS: { value: string; label: string }[] = [
+    { value: 'facebook', label: 'Facebook' },
+    { value: 'instagram', label: 'Instagram' },
+    { value: 'threads', label: 'Threads' },
     { value: 'x', label: 'X' },
     { value: 'bluesky', label: 'Bluesky' },
     { value: 'linkedin', label: 'LinkedIn' },
@@ -81,7 +91,13 @@ function FilterChip({
     );
 }
 
-export default function PostsIndex({ posts, filters, sets, counts }: Props) {
+export default function PostsIndex({
+    posts,
+    filters,
+    sets,
+    campaigns = [],
+    counts,
+}: Props) {
     const page = usePage();
     const scrollProps = page.scrollProps?.['posts'];
     const hasMore = !!scrollProps?.nextPage;
@@ -94,10 +110,13 @@ export default function PostsIndex({ posts, filters, sets, counts }: Props) {
         setLocalQ(filters.q);
     }, [filters.q]);
 
+    const activeCampaign = filters.campaign ?? '';
+
     function applyFilters(next: {
         status?: string;
         set?: string;
         platform?: string;
+        campaign?: string;
         q?: string;
     }) {
         if (debounceRef.current) {
@@ -108,6 +127,7 @@ export default function PostsIndex({ posts, filters, sets, counts }: Props) {
                 status: next.status ?? filters.status,
                 set: next.set ?? filters.set,
                 platform: next.platform ?? filters.platform,
+                campaign: next.campaign ?? activeCampaign,
                 q: next.q ?? filters.q,
             },
             only: ['posts', 'filters'],
@@ -150,8 +170,14 @@ export default function PostsIndex({ posts, filters, sets, counts }: Props) {
         applyFilters({ set: setId === 'all' ? '' : setId });
     }
 
+    function handleCampaignChange(campaign: string) {
+        applyFilters({ campaign: campaign === 'all' ? '' : campaign });
+    }
+
     const activeFilterCount =
-        (filters.platform !== '' ? 1 : 0) + (filters.set !== '' ? 1 : 0);
+        (filters.platform !== '' ? 1 : 0) +
+        (filters.set !== '' ? 1 : 0) +
+        (activeCampaign !== '' ? 1 : 0);
 
     const hasActiveFilter =
         activeFilterCount > 0 || filters.q !== '' || filters.status !== 'all';
@@ -257,6 +283,30 @@ export default function PostsIndex({ posts, filters, sets, counts }: Props) {
                                     </DropdownMenuRadioGroup>
                                 </>
                             )}
+                            {campaigns.length > 0 && (
+                                <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">
+                                        Campaign
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuRadioGroup
+                                        value={activeCampaign || 'all'}
+                                        onValueChange={handleCampaignChange}
+                                    >
+                                        <DropdownMenuRadioItem value="all">
+                                            All campaigns
+                                        </DropdownMenuRadioItem>
+                                        {campaigns.map((c) => (
+                                            <DropdownMenuRadioItem
+                                                key={c}
+                                                value={c}
+                                            >
+                                                {c}
+                                            </DropdownMenuRadioItem>
+                                        ))}
+                                    </DropdownMenuRadioGroup>
+                                </>
+                            )}
                         </DropdownMenuContent>
                     </DropdownMenu>
 
@@ -294,7 +344,7 @@ export default function PostsIndex({ posts, filters, sets, counts }: Props) {
                 </div>
 
                 {/* Active filter chips */}
-                {(filters.platform || filters.set) && (
+                {(filters.platform || filters.set || activeCampaign) && (
                     <div className="flex flex-wrap items-center gap-1.5 border-b border-border px-4 py-2">
                         <span className="text-[12px] text-muted-foreground">
                             Filters
@@ -313,10 +363,20 @@ export default function PostsIndex({ posts, filters, sets, counts }: Props) {
                                 onClear={() => handleSetChange('all')}
                             />
                         )}
+                        {activeCampaign && (
+                            <FilterChip
+                                label={activeCampaign}
+                                onClear={() => handleCampaignChange('all')}
+                            />
+                        )}
                         <button
                             type="button"
                             onClick={() =>
-                                applyFilters({ platform: '', set: '' })
+                                applyFilters({
+                                    platform: '',
+                                    set: '',
+                                    campaign: '',
+                                })
                             }
                             className="ml-1 text-[12px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                         >

@@ -19,6 +19,7 @@ export type { PostStatus } from '@/types/compose';
 export type PostRowData = {
     id: string;
     base_text: string;
+    campaign?: string | null;
     origin?: 'composer' | 'sync' | 'external';
     source_post_id?: string | null;
     status: PostStatus;
@@ -177,6 +178,17 @@ export function PostRow({ post }: { post: PostRowData }) {
             </span>
         ),
     });
+
+    if (post.campaign) {
+        metaParts.push({
+            key: 'campaign',
+            node: (
+                <span className="rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium text-foreground">
+                    {post.campaign}
+                </span>
+            ),
+        });
+    }
 
     // The one actionable signal a list needs: that something failed, and how
     // much. Detail and retry stay in the actions menu / on opening the post.

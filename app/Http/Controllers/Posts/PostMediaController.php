@@ -24,6 +24,7 @@ class PostMediaController extends Controller
             $post->workspace_id,
             $request->file('file'),
             $request->validated('alt_text'),
+            $post->campaign,
         );
 
         return response()->json(['media' => $media->toView()], 201);

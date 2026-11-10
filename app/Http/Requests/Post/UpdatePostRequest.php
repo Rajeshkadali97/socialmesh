@@ -61,6 +61,7 @@ class UpdatePostRequest extends FormRequest
             'placements.*.media_id' => ['required', 'string'],
             'placements.*.segment_ref' => ['required', 'string'],
             'placements.*.position' => ['required', 'integer'],
+            'campaign' => ['sometimes', 'nullable', 'string', 'max:120'],
             'auto_repost' => ['sometimes', 'nullable', 'boolean'],
             'skip_sync' => ['sometimes', 'boolean'],
             'expected_updated_at' => ['nullable', 'string'],

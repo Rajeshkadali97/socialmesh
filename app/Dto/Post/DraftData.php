@@ -66,6 +66,8 @@ final readonly class DraftData
          * {@see $segmentBreaksProvided}.
          */
         public bool $mediaIdsProvided = false,
+        public ?string $campaign = null,
+        public bool $campaignProvided = false,
     ) {}
 
     /**
@@ -116,6 +118,10 @@ final readonly class DraftData
             segmentBreaksProvided: array_key_exists('segment_breaks', $payload),
             placementsProvided: array_key_exists('placements', $payload),
             mediaIdsProvided: array_key_exists('media_ids', $payload),
+            campaign: isset($payload['campaign']) && trim((string) $payload['campaign']) !== ''
+                ? mb_substr(trim((string) $payload['campaign']), 0, 120)
+                : null,
+            campaignProvided: array_key_exists('campaign', $payload),
         );
     }
 

@@ -60,6 +60,7 @@ export type ComposerState = {
     conflict: PostView | null;
     autoRepost: boolean | null;
     skipSync: boolean;
+    campaign: string | null;
 };
 
 export type ComposerAction =
@@ -72,6 +73,7 @@ export type ComposerAction =
     | { type: 'setDestination'; destination: Destination }
     | { type: 'setAutoRepost'; value: boolean | null }
     | { type: 'setSkipSync'; value: boolean }
+    | { type: 'setCampaign'; value: string | null }
     | { type: 'toggleAutoSplit'; accountId: string }
     | { type: 'setFormat'; accountId: string; format: PostFormat }
     | { type: 'disableAutoSplit'; accountIds: string[] }
@@ -162,6 +164,7 @@ export function initialComposerState(
         conflict: null,
         autoRepost: null,
         skipSync: false,
+        campaign: null,
     };
 }
 
@@ -411,6 +414,7 @@ function hydrate(post: PostView): ComposerState {
         conflict: null,
         autoRepost: post.auto_repost ?? null,
         skipSync: post.skip_sync ?? false,
+        campaign: post.campaign ?? null,
     };
 }
 
@@ -505,6 +509,22 @@ export function composerReducer(
                 skipSync: action.value,
                 saveState: 'dirty',
             };
+
+        case 'setCampaign': {
+            const nextCampaign =
+                action.value && action.value.trim() !== ''
+                    ? action.value.trim()
+                    : null;
+            if (nextCampaign === state.campaign) {
+                return state;
+            }
+
+            return {
+                ...state,
+                campaign: nextCampaign,
+                saveState: 'dirty',
+            };
+        }
 
         case 'toggleAutoSplit':
             return {
@@ -867,6 +887,7 @@ export type PutBody = {
     expected_updated_at: string | null;
     auto_repost: boolean | null;
     skip_sync: boolean;
+    campaign: string | null;
     segment_breaks: string[];
     placements: Placement[];
 };
@@ -940,6 +961,7 @@ export function buildPutBody(
         expected_updated_at: state.baselineUpdatedAt,
         auto_repost: state.autoRepost,
         skip_sync: state.skipSync,
+        campaign: state.campaign,
         segment_breaks: state.segmentBreaks,
         placements: flattenPlacements(state.placements),
     };

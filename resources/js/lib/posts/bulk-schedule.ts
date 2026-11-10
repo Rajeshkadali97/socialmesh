@@ -8,6 +8,7 @@ export type BulkRow = {
     text: string;
     image_url: string | null;
     format: 'post' | 'story';
+    campaign?: string | null;
     errors: string[];
 };
 

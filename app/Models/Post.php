@@ -23,6 +23,7 @@ use Override;
  * @property string $id
  * @property string $workspace_id
  * @property string|null $account_set_id
+ * @property string|null $campaign
  * @property string $author_id
  * @property string $base_text
  * @property list<string> $segments
@@ -37,6 +38,7 @@ use Override;
 #[Fillable([
     'workspace_id',
     'account_set_id',
+    'campaign',
     'author_id',
     'base_text',
     'segments',

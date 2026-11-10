@@ -1120,6 +1120,27 @@ export default function Composer({
                                 })
                             }
                         />
+                        {!readOnly ? (
+                            <input
+                                type="text"
+                                aria-label="Campaign"
+                                placeholder="Campaign…"
+                                maxLength={120}
+                                value={state.campaign ?? ''}
+                                onChange={(e) =>
+                                    dispatch({
+                                        type: 'setCampaign',
+                                        value: e.target.value,
+                                    })
+                                }
+                                onBlur={() => void flush()}
+                                className="hidden h-7 w-28 rounded-md border border-border/80 bg-background px-2 text-[12px] text-foreground placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none sm:inline-block"
+                            />
+                        ) : state.campaign ? (
+                            <span className="hidden rounded-md border border-border/70 bg-muted/60 px-2 py-0.5 text-[11.5px] font-medium text-muted-foreground sm:inline-block">
+                                {state.campaign}
+                            </span>
+                        ) : null}
                         {!readOnly && (
                             <SaveIndicator
                                 state={state.saveState}

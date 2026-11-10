@@ -125,9 +125,10 @@ export default function BulkSchedule({ template, maxRows, timezone }: Props) {
                             Columns: <code>account</code>, <code>date</code>{' '}
                             (YYYY-MM-DD), <code>time</code> (HH:MM),{' '}
                             <code>text</code>, and optionally{' '}
-                            <code>image_url</code> (https link) and{' '}
-                            <code>format</code> (post or story). Copy rows
-                            straight from Google Sheets or Excel.
+                            <code>image_url</code> (https link),{' '}
+                            <code>format</code> (post or story), and{' '}
+                            <code>campaign</code>. Copy rows straight from
+                            Google Sheets or Excel.
                         </p>
                         <Textarea
                             aria-label="Spreadsheet rows"
@@ -217,6 +218,11 @@ export default function BulkSchedule({ template, maxRows, timezone }: Props) {
                                             {row.format === 'story' && (
                                                 <Badge variant="secondary">
                                                     story
+                                                </Badge>
+                                            )}
+                                            {row.campaign && (
+                                                <Badge variant="outline">
+                                                    {row.campaign}
                                                 </Badge>
                                             )}
                                             <span className="text-muted-foreground">

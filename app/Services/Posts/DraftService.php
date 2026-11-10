@@ -44,6 +44,7 @@ class DraftService
             $post = Post::create([
                 'workspace_id' => $workspaceId,
                 'account_set_id' => $this->scopedAccountSetId($workspaceId, $destination),
+                'campaign' => $data?->campaign,
                 'author_id' => $author->id,
                 'segments' => $segments,
                 'base_text' => implode("\n", $segments),
@@ -377,6 +378,9 @@ class DraftService
             if ($data->skipSyncProvided) {
                 $attributes['skip_sync'] = $data->skipSync;
             }
+            if ($data->campaignProvided) {
+                $attributes['campaign'] = $data->campaign;
+            }
 
             $post->forceFill($attributes)->save();
 
@@ -552,7 +556,11 @@ class DraftService
             PostMedia::withoutGlobalScopes()
                 ->where('workspace_id', $post->workspace_id)
                 ->whereKey($mediaId)
-                ->update(['post_id' => $post->id, 'position' => $position]);
+                ->update([
+                    'post_id' => $post->id,
+                    'position' => $position,
+                    'campaign' => $post->campaign,
+                ]);
         }
     }
 }

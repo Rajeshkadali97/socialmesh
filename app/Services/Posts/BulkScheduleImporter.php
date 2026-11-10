@@ -20,17 +20,17 @@ use Throwable;
 /**
  * Turns a pasted/uploaded CSV (or TSV) into scheduled posts for one workspace.
  *
- * Columns: account, date, time, text, image_url (optional), format (optional).
+ * Columns: account, date, time, text, image_url (optional), format (optional), campaign (optional).
  * Dates are YYYY-MM-DD and times HH:MM (24h), read in the workspace timezone.
  * Every row is validated independently so one bad row never blocks the rest.
  *
- * @phpstan-type BulkRow array{line: int, account: string, account_id: ?string, platform: ?string, handle: ?string, scheduled_at: ?string, text: string, image_url: ?string, format: string, errors: list<string>}
+ * @phpstan-type BulkRow array{line: int, account: string, account_id: ?string, platform: ?string, handle: ?string, scheduled_at: ?string, text: string, image_url: ?string, format: string, campaign: ?string, errors: list<string>}
  */
 class BulkScheduleImporter
 {
     public const MAX_ROWS = 50;
 
-    public const TEMPLATE = "account,date,time,text,image_url,format\n@brand,2026-12-01,09:00,\"Launch day! Link in bio.\",https://example.com/launch.jpg,post\n";
+    public const TEMPLATE = "account,date,time,text,image_url,format,campaign\n@brand,2026-12-01,09:00,\"Launch day! Link in bio.\",https://example.com/launch.jpg,post,Winter Launch\n";
 
     public function __construct(
         private readonly DraftService $drafts,
@@ -118,13 +118,14 @@ class BulkScheduleImporter
         try {
             $mediaIds = [];
             if ($row['image_url'] !== null) {
-                $mediaIds[] = $this->media->storeFromUrl($workspace->id, $row['image_url'])->id;
+                $mediaIds[] = $this->media->storeFromUrl($workspace->id, $row['image_url'], null, $row['campaign'])->id;
             }
 
             $post = $this->drafts->updateDraft($post, DraftData::fromArray([
                 'segments' => [$text],
                 'destination' => $destination,
                 'media_ids' => $mediaIds,
+                'campaign' => $row['campaign'],
                 'targets' => [['connected_account_id' => $accountId, 'format' => $format->value]],
             ]));
 
@@ -160,6 +161,8 @@ class BulkScheduleImporter
         $text = trim($record['text'] ?? '');
         $imageUrl = trim($record['image_url'] ?? '');
         $formatInput = strtolower(trim($record['format'] ?? ''));
+        $campaignInput = trim($record['campaign'] ?? '');
+        $campaign = $campaignInput !== '' ? mb_substr($campaignInput, 0, 120) : null;
 
         $account = null;
         if ($accountInput === '') {
@@ -223,6 +226,7 @@ class BulkScheduleImporter
             'text' => $text,
             'image_url' => $imageUrl !== '' ? $imageUrl : null,
             'format' => $format,
+            'campaign' => $campaign,
             'errors' => $errors,
         ];
     }

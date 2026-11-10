@@ -37,6 +37,7 @@ class StorePostRequest extends FormRequest
             'destination.id' => ['nullable', 'string', 'required_if:destination.kind,set,account'],
             'destination.ids' => ['array', 'required_if:destination.kind,accounts'],
             'destination.ids.*' => ['string'],
+            'campaign' => ['sometimes', 'nullable', 'string', 'max:120'],
             'auto_repost' => ['sometimes', 'nullable', 'boolean'],
             'skip_sync' => ['sometimes', 'boolean'],
             'segment_breaks' => ['array'],

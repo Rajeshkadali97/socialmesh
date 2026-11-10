@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
         if (app()->isLocal()) {
             $this->call([
                 DefaultUserSeeder::class,
+                AgencyWorkspacesSeeder::class,
                 DummyEngagementSeeder::class,
                 DummyMessagesSeeder::class,
                 DummyAnalyticsSeeder::class,

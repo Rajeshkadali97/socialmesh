@@ -41,6 +41,7 @@ class PostDuplicator
                 $draft = Post::create([
                     'workspace_id' => $source->workspace_id,
                     'account_set_id' => $source->account_set_id,
+                    'campaign' => $source->campaign,
                     'author_id' => $source->author_id,
                     'segments' => $source->segments,
                     'base_text' => $source->base_text,
@@ -134,6 +135,9 @@ class PostDuplicator
                 'path' => $path,
                 'mime' => $media->mime,
                 'size_bytes' => $media->size_bytes,
+                'checksum' => $media->checksum,
+                'campaign' => $media->campaign ?? $draft->campaign,
+                'drive_file_id' => $media->drive_file_id,
                 'width' => $media->width,
                 'height' => $media->height,
                 'alt_text' => $media->alt_text,

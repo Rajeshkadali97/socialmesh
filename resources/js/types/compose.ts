@@ -97,6 +97,10 @@ export type MediaView = {
     edit_url: string;
     /** Same-origin proxy URL for the retained pre-edit source; null when none. */
     source_edit_url: string | null;
+    drive_file_id?: string | null;
+    checksum?: string | null;
+    campaign?: string | null;
+    storage_error?: string | null;
 };
 
 /** An upload still in flight (or just failed) — rendered as a ghost chip. */
@@ -165,6 +169,7 @@ export type TargetView = {
 export type PostView = {
     id: string;
     base_text: string;
+    campaign?: string | null;
     segments: string[];
     mentions?: MentionPlaceholder[];
     status: PostStatus;

@@ -73,6 +73,7 @@ export function useAutosave({
             mentions: state.mentions,
             destination: state.destination,
             auto_repost: state.autoRepost,
+            campaign: state.campaign,
             // Persist the thread structure and per-segment placements on the
             // very first save too, so a reload before the next autosave PUT
             // sees a consistent post (stale break ids would otherwise degrade
@@ -260,6 +261,7 @@ export function useAutosave({
         state.formatByAccount,
         state.media,
         state.autoRepost,
+        state.campaign,
         state.placements,
         state.placementsByAccount,
         state.segmentBreaks,

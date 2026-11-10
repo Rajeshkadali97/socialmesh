@@ -37,10 +37,23 @@ class PostController extends Controller
         $status = $request->string('status')->toString();
         $set = $request->string('set')->toString();
         $platform = $request->string('platform')->toString();
+        $campaign = $request->string('campaign')->toString();
         $q = $request->string('q')->toString();
 
         $sets = AccountSet::query()->get(['id', 'name'])
             ->map(fn (AccountSet $s): array => ['id' => $s->id, 'name' => $s->name])->all();
+
+        $campaigns = Post::query()
+            ->where('status', '!=', PostStatus::Deleted->value)
+            ->whereNotNull('campaign')
+            ->where('campaign', '!=', '')
+            ->select('campaign')
+            ->distinct()
+            ->orderBy('campaign')
+            ->pluck('campaign')
+            ->map(static fn (mixed $c): string => (string) $c)
+            ->values()
+            ->all();
 
         // The status-tab counts and the paginated list share the same set/platform/
         // search predicates (only the status filter differs), so define them once to
@@ -49,6 +62,7 @@ class PostController extends Controller
             ->when($set !== '', fn ($q2) => $q2->where('account_set_id', $set))
             ->when($platform !== '', fn ($q2) => $q2->whereHas('targets',
                 fn ($t) => $t->where('platform', $platform)))
+            ->when($campaign !== '', fn ($q2) => $q2->where('campaign', $campaign))
             ->when($q !== '', fn ($q2) => $q2->whereLike('base_text', "%{$q}%"));
 
         // Per-status tab counts honour the active search/platform/set filters but
@@ -95,8 +109,9 @@ class PostController extends Controller
                     ...PostListItem::make($post),
                     'sort_key' => $post->getAttribute('sort_key'),
                 ]))->defer(),
-            'filters' => ['status' => $status ?: 'all', 'set' => $set, 'platform' => $platform, 'q' => $q],
+            'filters' => ['status' => $status ?: 'all', 'set' => $set, 'platform' => $platform, 'campaign' => $campaign, 'q' => $q],
             'sets' => $sets,
+            'campaigns' => $campaigns,
             'counts' => $counts,
         ]);
     }

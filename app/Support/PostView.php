@@ -30,6 +30,7 @@ final class PostView
         return [
             'id' => $post->id,
             'base_text' => $post->base_text,
+            'campaign' => $post->campaign,
             'segments' => $post->segments,
             'mentions' => $post->mentions ?? [],
             'status' => $post->status->value,
