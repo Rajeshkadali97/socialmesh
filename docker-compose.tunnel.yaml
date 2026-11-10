@@ -24,10 +24,15 @@ services:
 
     cloudflared:
         image: cloudflare/cloudflared:2026.10.0
+        container_name: socialmesh-cloudflared
         restart: unless-stopped
+        mem_limit: 128m
+        cpus: 0.25
         command: tunnel --no-autoupdate run
         environment:
             TUNNEL_TOKEN: "${TUNNEL_TOKEN:?Set TUNNEL_TOKEN in .env}"
+        networks:
+            - socialmesh_net
         depends_on:
             app:
                 condition: service_healthy

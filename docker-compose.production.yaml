@@ -7,7 +7,7 @@ x-environment: &app-env
     APP_ENV: "${APP_ENV:-production}"
     APP_KEY: "${APP_KEY:?Set APP_KEY in .env}"
     APP_DEBUG: "${APP_DEBUG:-false}"
-    APP_URL: "${APP_URL:-https://socialmesh.ocus.qd.je}"
+    APP_URL: "${APP_URL:-https://socialmesh.ebintech.in}"
     OCTANE_SERVER: frankenphp
     OCTANE_HTTPS: "${OCTANE_HTTPS:-true}"
     SESSION_SECURE_COOKIE: "${SESSION_SECURE_COOKIE:-true}"
@@ -19,6 +19,9 @@ x-environment: &app-env
     QUEUE_CONNECTION: "${QUEUE_CONNECTION:-database}"
     SESSION_DRIVER: "${SESSION_DRIVER:-database}"
     FILESYSTEM_DISK: "${FILESYSTEM_DISK:-s3}"
+    PUBLIC_IMAGES_DISK: "${PUBLIC_IMAGES_DISK:-}"
+    MEDIA_PUBLISHING_DISK: "${MEDIA_PUBLISHING_DISK:-}"
+    MEDIA_ARCHIVE_DISK: "${MEDIA_ARCHIVE_DISK:-}"
     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:-}"
     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:-}"
     AWS_DEFAULT_REGION: "${AWS_DEFAULT_REGION:-auto}"
@@ -26,13 +29,26 @@ x-environment: &app-env
     AWS_ENDPOINT: "${AWS_ENDPOINT:-}"
     AWS_URL: "${AWS_URL:-}"
     AWS_USE_PATH_STYLE_ENDPOINT: "${AWS_USE_PATH_STYLE_ENDPOINT:-true}"
+    R2_ACCESS_KEY_ID: "${R2_ACCESS_KEY_ID:-}"
+    R2_SECRET_ACCESS_KEY: "${R2_SECRET_ACCESS_KEY:-}"
+    R2_DEFAULT_REGION: "${R2_DEFAULT_REGION:-auto}"
+    R2_BUCKET: "${R2_BUCKET:-}"
+    R2_ENDPOINT: "${R2_ENDPOINT:-}"
+    R2_URL: "${R2_URL:-}"
+    R2_USE_PATH_STYLE_ENDPOINT: "${R2_USE_PATH_STYLE_ENDPOINT:-true}"
+    GOOGLE_DRIVE_CLIENT_ID: "${GOOGLE_DRIVE_CLIENT_ID:-}"
+    GOOGLE_DRIVE_CLIENT_SECRET: "${GOOGLE_DRIVE_CLIENT_SECRET:-}"
+    GOOGLE_DRIVE_REDIRECT_URI: "${GOOGLE_DRIVE_REDIRECT_URI:-${APP_URL:-https://socialmesh.ebintech.in}/settings/instance/storage/google/callback}"
+    GOOGLE_DRIVE_REFRESH_TOKEN: "${GOOGLE_DRIVE_REFRESH_TOKEN:-}"
+    GOOGLE_DRIVE_ROOT_FOLDER_ID: "${GOOGLE_DRIVE_ROOT_FOLDER_ID:-root}"
+    GOOGLE_DRIVE_ARCHIVE_ENABLED: "${GOOGLE_DRIVE_ARCHIVE_ENABLED:-false}"
     FACEBOOK_CLIENT_ID: "${FACEBOOK_CLIENT_ID:-}"
     FACEBOOK_CLIENT_SECRET: "${FACEBOOK_CLIENT_SECRET:-}"
-    FACEBOOK_REDIRECT_URI: "${FACEBOOK_REDIRECT_URI:-${APP_URL:-https://socialmesh.ocus.qd.je}/accounts/callback/meta}"
+    FACEBOOK_REDIRECT_URI: "${FACEBOOK_REDIRECT_URI:-${APP_URL:-https://socialmesh.ebintech.in}/accounts/callback/meta}"
     FACEBOOK_GRAPH_VERSION: "${FACEBOOK_GRAPH_VERSION:-v25.0}"
     THREADS_CLIENT_ID: "${THREADS_CLIENT_ID:-}"
     THREADS_CLIENT_SECRET: "${THREADS_CLIENT_SECRET:-}"
-    THREADS_REDIRECT_URI: "${THREADS_REDIRECT_URI:-${APP_URL:-https://socialmesh.ocus.qd.je}/accounts/callback/threads}"
+    THREADS_REDIRECT_URI: "${THREADS_REDIRECT_URI:-${APP_URL:-https://socialmesh.ebintech.in}/accounts/callback/threads}"
     DIRECT_MESSAGES_ENABLED: "${DIRECT_MESSAGES_ENABLED:-false}"
     QUEUE_WORKER_ENABLED: "${QUEUE_WORKER_ENABLED:-true}"
     QUEUE_WORKER_COUNT: "${QUEUE_WORKER_COUNT:-1}"
@@ -43,8 +59,11 @@ x-environment: &app-env
 services:
     app:
         image: "ghcr.io/revanthlol/socialmesh:${SOCIALMESH_IMAGE_TAG:-latest}"
+        container_name: socialmesh-app
         pull_policy: always
         restart: unless-stopped
+        mem_limit: 1g
+        cpus: 1.0
         env_file:
             - .env
         environment:
@@ -54,6 +73,8 @@ services:
         volumes:
             - socialmesh_storage:/var/www/html/storage
             - socialmesh_sqlite:/var/www/html/database/sqlite
+        networks:
+            - socialmesh_net
         stop_grace_period: 60s
         healthcheck:
             test: ["CMD", "healthcheck-octane"]
@@ -67,3 +88,8 @@ volumes:
         name: socialmesh_storage
     socialmesh_sqlite:
         name: socialmesh_sqlite
+
+networks:
+    socialmesh_net:
+        name: socialmesh_net
+        driver: bridge
