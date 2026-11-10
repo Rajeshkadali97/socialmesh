@@ -323,3 +323,109 @@ it('allows an instance owner to connect and disconnect Google Drive via OAuth', 
         ->delete(route('instance-settings.storage.google.disconnect'))
         ->assertRedirect(route('instance-settings.platforms'));
 });
+
+it('verifies Google Drive connection health, quota usage, and root folder creation via admin endpoint', function (): void {
+    Http::fake([
+        'https://oauth2.googleapis.com/token' => Http::response([
+            'access_token' => 'verify-access-token',
+            'expires_in' => 3600,
+        ], 200),
+        'https://www.googleapis.com/drive/v3/about*' => Http::response([
+            'user' => [
+                'emailAddress' => 'ops@ebintech.in',
+                'displayName' => 'Ebin Tech Ops',
+            ],
+            'storageQuota' => [
+                'limit' => '16106127360',
+                'usage' => '2147483648',
+                'usageInDrive' => '1073741824',
+            ],
+        ], 200),
+    ]);
+
+    GoogleDriveTokenProvider::storeConnectedAccount('valid-refresh-token', 'ops@ebintech.in', 'root-folder-123');
+
+    $owner = User::factory()->create(['instance_role' => InstanceRole::Owner]);
+    $workspace = Workspace::factory()->for($owner, 'owner')->create();
+    $owner->forceFill(['current_workspace_id' => $workspace->id])->save();
+
+    $this->actingAs($owner)
+        ->post(route('instance-settings.storage.google.verify'))
+        ->assertRedirect(route('instance-settings.platforms'));
+
+    $status = (new GoogleDriveTokenProvider(config('filesystems.disks.google')))->status();
+
+    expect($status['connected'])->toBeTrue()
+        ->and($status['health'])->toBe('healthy')
+        ->and($status['email'])->toBe('ops@ebintech.in')
+        ->and($status['quota_used_bytes'])->toBe(2147483648)
+        ->and($status['quota_limit_bytes'])->toBe(16106127360)
+        ->and($status['last_verified_at'])->not->toBeNull()
+        ->and($status['last_error'])->toBeNull();
+});
+
+it('completes full lifecycle: upload -> preview proxy -> duplicate post -> R2/public stage -> Meta publish', function (): void {
+    Storage::fake('public');
+    config([
+        'filesystems.default' => 'google',
+        'filesystems.publishing_disk' => 'public',
+    ]);
+
+    $fakeFile = UploadedFile::fake()->image('lifecycle.jpg', 400, 400);
+    $jpegBytes = (string) file_get_contents($fakeFile->getRealPath());
+
+    Http::fake([
+        'https://oauth2.googleapis.com/token' => Http::response([
+            'access_token' => 'lifecycle-token',
+            'expires_in' => 3600,
+        ], 200),
+        'https://www.googleapis.com/drive/v3/files*' => function (Request $request) use ($jpegBytes) {
+            if ($request->method() === 'POST') {
+                return Http::response(['id' => 'folder-lifecycle-1', 'name' => 'folder'], 200);
+            }
+            if (str_contains($request->url(), 'alt=media')) {
+                return Http::response($jpegBytes, 200);
+            }
+            if (str_contains($request->url(), "mimeType != 'application/vnd.google-apps.folder'")) {
+                return Http::response([
+                    'files' => [[
+                        'id' => 'drive-lifecycle-file-1',
+                        'name' => 'lifecycle.jpg',
+                        'mimeType' => 'image/jpeg',
+                        'size' => strlen($jpegBytes),
+                    ]],
+                ], 200);
+            }
+
+            return Http::response(['files' => []], 200);
+        },
+        'https://www.googleapis.com/upload/drive/v3/files*' => Http::response([
+            'id' => 'drive-lifecycle-file-1',
+            'name' => 'lifecycle.jpg',
+            'mimeType' => 'image/jpeg',
+            'size' => strlen($jpegBytes),
+        ], 200),
+    ]);
+
+    $user = User::factory()->create();
+    $workspace = Workspace::factory()->for($user, 'owner')->create();
+    $user->forceFill(['current_workspace_id' => $workspace->id])->save();
+
+    $service = app(MediaStorageService::class);
+    $media = $service->store($workspace->id, $fakeFile, 'Lifecycle Alt', 'Summer Campaign');
+
+    expect($media->disk)->toBe('google')
+        ->and($media->drive_file_id)->toBe('drive-lifecycle-file-1')
+        ->and($media->campaign)->toBe('Summer Campaign')
+        ->and($media->url())->toContain('/media/'.$media->id.'/raw');
+
+    // Preview / raw proxy route streams bytes from Google Drive for authenticated workspace user
+    $rawResponse = $this->actingAs($user)->get(route('media.raw', $media));
+    $rawResponse->assertOk();
+    expect($rawResponse->streamedContent())->toBe($jpegBytes);
+
+    // Stage to publishing disk for Meta URL fetch
+    $publicUrl = app(PublicMediaUrl::class)->for($media, Platform::Instagram);
+    expect($publicUrl)->toContain('/storage/published/'.$media->path);
+    Storage::disk('public')->assertExists('published/'.$media->path);
+});

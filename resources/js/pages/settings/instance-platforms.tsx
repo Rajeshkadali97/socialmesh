@@ -26,15 +26,37 @@ type StorageSummary = {
     publishing_disk: string;
     archive_disk: string | null;
     r2_configured: boolean;
+    r2_public_url_configured?: boolean;
+    publishing_errors?: string[];
     google_drive: {
         connected: boolean;
         source: string | null;
         email: string | null;
         root_folder_id: string;
+        root_folder_name?: string;
         archive_enabled: boolean;
         oauth_configured: boolean;
+        connected_at?: string | null;
+        last_verified_at?: string | null;
+        last_error?: string | null;
+        quota_used_bytes?: number | null;
+        quota_limit_bytes?: number | null;
+        health?: string;
     };
 };
+
+function formatBytes(bytes?: number | null): string | null {
+    if (bytes === null || bytes === undefined || bytes < 0) {
+        return null;
+    }
+    if (bytes < 1024 * 1024) {
+        return `${(bytes / 1024).toFixed(1)} KB`;
+    }
+    if (bytes < 1024 * 1024 * 1024) {
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
 
 type Props = {
     platforms: PlatformToggle[];
@@ -207,8 +229,59 @@ export default function InstancePlatforms({
                                             ? `Connected${storage.google_drive.email ? ` (${storage.google_drive.email})` : ''}`
                                             : 'Not connected'}
                                     </div>
+                                    <div className="mt-1 text-xs text-muted-foreground">
+                                        Health:{' '}
+                                        <span className="font-medium capitalize">
+                                            {storage.google_drive.health ??
+                                                (storage.google_drive.connected
+                                                    ? 'configured'
+                                                    : 'disconnected')}
+                                        </span>
+                                        {storage.google_drive
+                                            .last_verified_at && (
+                                            <span>
+                                                {' '}
+                                                · Verified{' '}
+                                                {
+                                                    storage.google_drive.last_verified_at.split(
+                                                        'T',
+                                                    )[0]
+                                                }
+                                            </span>
+                                        )}
+                                    </div>
+                                    {storage.google_drive.quota_used_bytes !==
+                                        null &&
+                                        storage.google_drive
+                                            .quota_used_bytes !== undefined && (
+                                            <div className="mt-0.5 text-xs text-muted-foreground">
+                                                Drive usage:{' '}
+                                                {formatBytes(
+                                                    storage.google_drive
+                                                        .quota_used_bytes,
+                                                )}
+                                                {storage.google_drive
+                                                    .quota_limit_bytes
+                                                    ? ` / ${formatBytes(storage.google_drive.quota_limit_bytes)}`
+                                                    : ''}
+                                            </div>
+                                        )}
                                 </div>
                             </div>
+
+                            {storage.google_drive.last_error && (
+                                <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                                    Google Drive error:{' '}
+                                    {storage.google_drive.last_error}
+                                </div>
+                            )}
+
+                            {storage.publishing_errors &&
+                                storage.publishing_errors.length > 0 && (
+                                    <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+                                        {storage.publishing_errors.join(' ')}
+                                    </div>
+                                )}
 
                             <div className="flex flex-wrap items-center gap-2">
                                 {storage.google_drive.oauth_configured ? (
@@ -230,6 +303,21 @@ export default function InstancePlatforms({
                                         GOOGLE_DRIVE_CLIENT_SECRET in .env to
                                         enable Google Drive OAuth.
                                     </span>
+                                )}
+                                {storage.google_drive.connected && (
+                                    <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        onClick={() =>
+                                            router.post(
+                                                '/settings/instance/storage/google/verify',
+                                                {},
+                                                { preserveScroll: true },
+                                            )
+                                        }
+                                    >
+                                        Verify connection
+                                    </Button>
                                 )}
                                 {storage.google_drive.connected &&
                                     storage.google_drive.source === 'oauth' && (

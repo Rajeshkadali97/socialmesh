@@ -40,7 +40,42 @@ class GoogleDriveClient
         private readonly GoogleDriveTokenProvider $tokens,
         private readonly string $rootFolderId = 'root',
         private readonly bool $allowDelete = false,
+        private readonly string $rootFolderName = 'SocialMesh',
     ) {}
+
+    /**
+     * Probe the Google Drive connection, account quota/user info (`about`), and ensure the root folder exists.
+     *
+     * @return array{healthy: bool, email: string|null, root_folder_id: string, quota_used_bytes: int|null, quota_limit_bytes: int|null}
+     */
+    public function verifyConnection(): array
+    {
+        $aboutUrl = self::API_BASE.'/about?fields='.rawurlencode('user(emailAddress,displayName),storageQuota(limit,usage,usageInDrive)');
+        $response = $this->sendWithRetry(fn (PendingRequest $http): Response => $http->get($aboutUrl));
+
+        $email = $response->json('user.emailAddress');
+        $usage = $response->json('storageQuota.usage');
+        $limit = $response->json('storageQuota.limit');
+
+        $rootId = $this->effectiveRootFolderId();
+
+        GoogleDriveTokenProvider::recordHealthCheck(
+            healthy: true,
+            error: null,
+            email: is_string($email) && $email !== '' ? $email : null,
+            rootFolderId: $rootId !== 'root' ? $rootId : null,
+            quotaUsedBytes: is_numeric($usage) ? (int) $usage : null,
+            quotaLimitBytes: is_numeric($limit) ? (int) $limit : null,
+        );
+
+        return [
+            'healthy' => true,
+            'email' => is_string($email) && $email !== '' ? $email : null,
+            'root_folder_id' => $rootId,
+            'quota_used_bytes' => is_numeric($usage) ? (int) $usage : null,
+            'quota_limit_bytes' => is_numeric($limit) ? (int) $limit : null,
+        ];
+    }
 
     /**
      * Upload raw bytes to Google Drive at a logical relative path (e.g. `media/ws-1/launch/photo.jpg`).
@@ -365,7 +400,30 @@ class GoogleDriveClient
         $status = $this->tokens->status();
         $id = trim($status['root_folder_id'] !== '' ? $status['root_folder_id'] : $this->rootFolderId);
 
-        return $id !== '' ? $id : 'root';
+        if ($id !== '' && $id !== 'root') {
+            return $id;
+        }
+
+        $folderName = trim($this->rootFolderName);
+        if ($folderName === '' || strtolower($folderName) === 'root') {
+            return 'root';
+        }
+
+        if (isset($this->folderCache['__root__:'.$folderName])) {
+            return $this->folderCache['__root__:'.$folderName];
+        }
+
+        $existingId = $this->findChildFolder('root', $folderName);
+        if ($existingId !== null) {
+            $this->folderCache['__root__:'.$folderName] = $existingId;
+
+            return $existingId;
+        }
+
+        $createdId = $this->createChildFolder('root', $folderName);
+        $this->folderCache['__root__:'.$folderName] = $createdId;
+
+        return $createdId;
     }
 
     private function findDirectoryId(string $directory): ?string

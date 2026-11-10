@@ -1,8 +1,8 @@
 # SocialMesh — Shared VPS Deployment Runbook
 
 > [!CAUTION]
-> **CRITICAL SHARED VPS PROTECTION RULE (`72.61.224.236`)**
-> This VPS hosts the live production application **RK Enterprises Inventory** at `/opt/rk-inventory/deploy` (`deploy-app-1`, `deploy-caddy-1`).
+> **CRITICAL SHARED VPS PROTECTION RULE (`138.252.100.129`)**
+> This VPS (`server-2vf78k`, Ubuntu 24.04.5 LTS) hosts the live production application **RK Enterprises Inventory** at `/opt/rk-inventory/deploy` (`deploy-app-1`, `deploy-caddy-1`).
 > - **NEVER** modify `/opt/rk-inventory/deploy` or any files inside `/opt/rk-inventory`.
 > - **NEVER** stop, restart, rebuild, or inspect secrets of `deploy-app-1` or `deploy-caddy-1`.
 > - **NEVER** run `docker system prune`, `docker volume prune`, or `docker network prune`.
@@ -20,7 +20,7 @@ SocialMesh runs in complete isolation on the shared VPS:
 | **Compose Project** | `socialmesh` | `deploy` |
 | **Containers** | `socialmesh-app`, `socialmesh-cloudflared` | `deploy-app-1`, `deploy-caddy-1` |
 | **Docker Network** | `socialmesh_net` | `deploy_default` |
-| **Docker Volumes** | `socialmesh_sqlite`, `socialmesh_storage` | RK Inventory volumes |
+| **Docker Volumes** | `socialmesh_sqlite`, `socialmesh_storage` | `deploy_caddy_data` |
 | **Host Port Binding** | `127.0.0.1:8082:8080` (loopback only) | `80`, `443` |
 | **Ingress / TLS** | Cloudflare Tunnel (`cloudflared` -> `http://app:8080`) | Host Caddy |
 | **Public Domain** | `https://socialmesh.ebintech.in` | RK Inventory domain |
@@ -30,7 +30,7 @@ SocialMesh runs in complete isolation on the shared VPS:
 
 ## 2. Pre-Deployment Verification Checklist (Read-Only on VPS)
 
-Before deploying SocialMesh, SSH into `72.61.224.236` and run these read-only checks to verify VPS health and confirm RK Enterprises Inventory is healthy:
+Before deploying SocialMesh, SSH into `138.252.100.129` (`ssh -i /root/.ssh/ebin-tech root@138.252.100.129`) and run these read-only checks to verify VPS health and confirm RK Enterprises Inventory is healthy:
 
 ```bash
 # 1. Verify running containers (confirm deploy-app-1 and deploy-caddy-1 are Up)

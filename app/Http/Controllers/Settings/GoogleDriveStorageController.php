@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Storage\GoogleDriveClient;
 use App\Services\Storage\GoogleDriveTokenProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -139,6 +140,42 @@ class GoogleDriveStorageController extends Controller
         return redirect()
             ->route('instance-settings.platforms')
             ->with('success', 'Google Drive storage connected.');
+    }
+
+    public function verify(Request $request): RedirectResponse
+    {
+        /** @var User|null $user */
+        $user = $request->user();
+        abort_unless($user?->isInstanceOwner(), 403);
+
+        $diskConfig = (array) config('filesystems.disks.google', []);
+        $provider = new GoogleDriveTokenProvider($diskConfig);
+
+        if (! $provider->isConfigured()) {
+            return redirect()
+                ->route('instance-settings.platforms')
+                ->with('error', 'Google Drive is not connected or credentials are missing.');
+        }
+
+        try {
+            $client = new GoogleDriveClient(
+                tokens: $provider,
+                rootFolderId: (string) ($diskConfig['root_folder_id'] ?? 'root'),
+                allowDelete: false,
+                rootFolderName: (string) ($diskConfig['root_folder_name'] ?? 'SocialMesh'),
+            );
+            $result = $client->verifyConnection();
+
+            return redirect()
+                ->route('instance-settings.platforms')
+                ->with('success', 'Google Drive connection verified'.($result['email'] !== null ? " ({$result['email']})" : '').'.');
+        } catch (Throwable $e) {
+            GoogleDriveTokenProvider::recordHealthCheck(false, $e->getMessage());
+
+            return redirect()
+                ->route('instance-settings.platforms')
+                ->with('error', 'Google Drive verification failed: '.$e->getMessage());
+        }
     }
 
     public function disconnect(Request $request): RedirectResponse

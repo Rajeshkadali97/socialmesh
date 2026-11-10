@@ -30,6 +30,7 @@ class PostVideoUploadController extends Controller
             $request->validated(),
             (string) $post->workspace_id,
             ['post_id' => $post->id],
+            $post->campaign,
         );
     }
 }

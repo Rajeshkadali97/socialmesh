@@ -142,10 +142,18 @@ class PostMedia extends Model
      * (images) get a permanent public URL; private disks (videos live on the
      * default disk — local-serve in dev, a private S3 bucket in production) need
      * a signed, expiring URL, otherwise the serve route / bucket rejects a
-     * direct GET with 403.
+     * direct GET with 403. Google Drive-backed media always resolves through the
+     * authenticated same-origin `media.raw` proxy route because Google Drive
+     * does not use Laravel's `local` disk serve route.
      */
     private function resolveUrl(string $disk, string $path): string
     {
+        if ($disk === 'google') {
+            return $path === $this->source_path
+                ? route('media.raw', ['media' => $this, 'variant' => 'source'])
+                : route('media.raw', $this);
+        }
+
         return FileStorage::url($path, $disk);
     }
 

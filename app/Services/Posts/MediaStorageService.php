@@ -157,14 +157,28 @@ class MediaStorageService
         $disk = FileStorage::diskName();
         $normalizedCampaign = $this->normalizeCampaign($campaign);
         $directory = $this->mediaDirectory($workspaceId, $normalizedCampaign);
-        $path = $composed->store($directory, $disk);
-        $sourcePath = $source->store($directory, $disk);
+        $storedPath = $composed->store($directory, $disk);
+        $storedSourcePath = $source->store($directory, $disk);
+        if (! is_string($storedPath) || ! is_string($storedSourcePath)) {
+            throw new RuntimeException('Failed to store beautified media files.');
+        }
+        $path = $storedPath;
+        $sourcePath = $storedSourcePath;
 
         $realPath = $composed->getRealPath();
         $checksum = is_string($realPath) && $realPath !== '' && is_file($realPath)
             ? (hash_file('sha256', $realPath) ?: null)
             : null;
         $dimensions = is_string($realPath) && $realPath !== '' ? (@getimagesize($realPath) ?: [null, null]) : [null, null];
+        $mime = (string) $composed->getMimeType();
+        [$driveFileId, , , $storageError] = $this->syncGoogleDriveMetadata(
+            workspaceId: $workspaceId,
+            primaryDisk: $disk,
+            primaryPath: $path,
+            checksum: $checksum,
+            mime: $mime,
+            bytes: is_string($realPath) && $realPath !== '' && is_file($realPath) ? ((string) file_get_contents($realPath)) : null,
+        );
 
         return PostMedia::create([
             'workspace_id' => $workspaceId,
@@ -174,10 +188,12 @@ class MediaStorageService
             'kind' => 'image',
             'source_disk' => $disk,
             'source_path' => $sourcePath,
+            'drive_file_id' => $driveFileId,
             'checksum' => $checksum,
             'campaign' => $normalizedCampaign,
+            'storage_error' => $storageError,
             'edit_settings' => $settings,
-            'mime' => (string) $composed->getMimeType(),
+            'mime' => $mime,
             'size_bytes' => $composed->getSize(),
             'width' => $dimensions[0] ?? null,
             'height' => $dimensions[1] ?? null,
@@ -197,18 +213,33 @@ class MediaStorageService
         // failed store never leaves the row pointing at a now-missing path.
         $oldPath = $media->path;
         $directory = $this->mediaDirectory($media->workspace_id, $media->campaign);
-        $path = $composed->store($directory, $media->disk);
+        $storedPath = $composed->store($directory, $media->disk);
+        if (! is_string($storedPath)) {
+            throw new RuntimeException('Failed to store updated media file.');
+        }
+        $path = $storedPath;
         $realPath = $composed->getRealPath();
         $checksum = is_string($realPath) && $realPath !== '' && is_file($realPath)
             ? (hash_file('sha256', $realPath) ?: null)
             : $media->checksum;
         $dimensions = is_string($realPath) && $realPath !== '' ? (@getimagesize($realPath) ?: [null, null]) : [null, null];
+        $mime = (string) $composed->getMimeType();
+        [$driveFileId, , , $storageError] = $this->syncGoogleDriveMetadata(
+            workspaceId: $media->workspace_id,
+            primaryDisk: $media->disk,
+            primaryPath: $path,
+            checksum: $checksum,
+            mime: $mime,
+            bytes: is_string($realPath) && $realPath !== '' && is_file($realPath) ? ((string) file_get_contents($realPath)) : null,
+        );
 
         $media->update([
             'path' => $path,
             'checksum' => $checksum,
+            'drive_file_id' => $driveFileId ?? $media->drive_file_id,
+            'storage_error' => $storageError,
             'edit_settings' => $settings,
-            'mime' => (string) $composed->getMimeType(),
+            'mime' => $mime,
             'size_bytes' => $composed->getSize(),
             'width' => $dimensions[0] ?? null,
             'height' => $dimensions[1] ?? null,

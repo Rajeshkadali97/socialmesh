@@ -45,4 +45,4 @@ All work from commit `5720c73295a11da655d02f623b6fcf0618ba0898` has been preserv
 
 ### C. Shared VPS Deployment & Backup Readiness
 - Updated `docker-compose.production.yaml`, `docker-compose.tunnel.yaml`, `.env.example.prod`, and `docker/backup.sh` for strict container/volume/network isolation (`socialmesh` project, `socialmesh-app`, `socialmesh-cloudflared`, `socialmesh_storage`, `socialmesh_sqlite`, `socialmesh_net`, `mem_limit: 1g`, `cpus: 1.0`, `QUEUE_WORKER_COUNT=1`, `INERTIA_SSR_ENABLED=false`, target domain `https://socialmesh.ebintech.in`).
-- Zero changes made to the live VPS (`72.61.224.236`) or RK Enterprises Inventory (`/opt/rk-inventory/deploy`).
+- Verified live VPS target via read-only SSH at `138.252.100.129` (`server-2vf78k`, Ubuntu 24.04.5 LTS, 3.1 GiB free RAM, 14 GB free disk). Zero changes made to the live VPS (`138.252.100.129`) or RK Enterprises Inventory (`/opt/rk-inventory/deploy`).

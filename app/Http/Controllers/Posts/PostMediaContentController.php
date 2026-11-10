@@ -36,7 +36,17 @@ class PostMediaContentController extends Controller
         }
 
         $storage = FileStorage::disk($disk);
-        abort_unless($storage->exists($path), 404);
+        if (! $storage->exists($path)) {
+            // If primary disk file is missing and a Google Drive archive copy exists,
+            // fall back to reading from Google Drive so archived assets remain previewable.
+            if ($disk !== 'google' && $media->source_disk === 'google' && $media->source_path !== null) {
+                $storage = FileStorage::disk('google');
+                $path = $media->source_path;
+                abort_unless($storage->exists($path), 404);
+            } else {
+                abort(404);
+            }
+        }
 
         return $storage->response($path, null, [
             // Authenticated per-user response — never store in a shared cache.

@@ -91,6 +91,7 @@ class AppServiceProvider extends ServiceProvider
                 tokens: $tokens,
                 rootFolderId: (string) ($config['root_folder_id'] ?? 'root'),
                 allowDelete: (bool) ($config['allow_delete'] ?? false),
+                rootFolderName: (string) ($config['root_folder_name'] ?? 'SocialMesh'),
             );
             $adapter = new GoogleDriveFilesystemAdapter($client);
 

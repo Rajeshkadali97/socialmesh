@@ -158,7 +158,9 @@ class PostDuplicator
     private function copyFile(string $disk, string $path): string
     {
         $extension = pathinfo($path, PATHINFO_EXTENSION);
-        $newPath = 'media/'.Str::uuid()->toString().($extension === '' ? '' : '.'.$extension);
+        $directory = pathinfo($path, PATHINFO_DIRNAME);
+        $prefix = $directory !== '' && $directory !== '.' ? $directory : 'media';
+        $newPath = $prefix.'/'.Str::uuid()->toString().($extension === '' ? '' : '.'.$extension);
 
         FileStorage::disk($disk)->copy($path, $newPath);
 

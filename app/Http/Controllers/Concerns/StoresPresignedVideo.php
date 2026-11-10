@@ -50,7 +50,7 @@ trait StoresPresignedVideo
      * @param  array<string, mixed>  $validated
      * @param  array<string, mixed>  $logContext  Identifies the owner in rejection logs.
      */
-    private function storeUploadedVideo(array $validated, string $workspaceId, array $logContext = []): JsonResponse
+    private function storeUploadedVideo(array $validated, string $workspaceId, array $logContext = [], ?string $campaign = null): JsonResponse
     {
         $key = (string) $validated['key'];
         $disk = FileStorage::diskName();
@@ -79,7 +79,9 @@ trait StoresPresignedVideo
             abort(422, 'Uploaded file is not a valid MP4 video.');
         }
 
-        $final = 'media/'.$workspaceId.'/'.Str::uuid().'.mp4';
+        $campaignSlug = $campaign !== null && trim($campaign) !== '' ? Str::slug(trim($campaign)) : '';
+        $directory = $campaignSlug !== '' ? 'media/'.$workspaceId.'/'.$campaignSlug : 'media/'.$workspaceId;
+        $final = $directory.'/'.Str::uuid().'.mp4';
         Storage::disk($disk)->move($key, $final);
 
         $media = PostMedia::create([
@@ -87,6 +89,7 @@ trait StoresPresignedVideo
             'post_id' => null,
             'disk' => $disk,
             'path' => $final,
+            'campaign' => $campaign !== null && trim($campaign) !== '' ? mb_substr(trim($campaign), 0, 120) : null,
             'kind' => 'video',
             'mime' => 'video/mp4',
             'size_bytes' => $size,

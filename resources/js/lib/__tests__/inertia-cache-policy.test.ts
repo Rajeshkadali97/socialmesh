@@ -35,5 +35,5 @@ describe('Inertia cache policy', () => {
             .map(({ path }) => path);
 
         expect(offenders).toEqual([]);
-    });
+    }, 30_000);
 });

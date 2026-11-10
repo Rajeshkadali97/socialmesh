@@ -26,6 +26,7 @@ class PostImageEditController extends Controller
             $request->file('source'),
             $request->validated('settings'),
             $request->validated('alt_text'),
+            $post->campaign,
         );
 
         return response()->json(['media' => $media->toView()], 201);

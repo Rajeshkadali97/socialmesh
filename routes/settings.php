@@ -55,6 +55,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('settings/instance/platforms', [InstanceSettingsController::class, 'updatePlatforms'])->name('instance-settings.updatePlatforms');
     Route::get('settings/instance/storage/google/redirect', [GoogleDriveStorageController::class, 'redirect'])->name('instance-settings.storage.google.redirect');
     Route::get('settings/instance/storage/google/callback', [GoogleDriveStorageController::class, 'callback'])->name('instance-settings.storage.google.callback');
+    Route::post('settings/instance/storage/google/verify', [GoogleDriveStorageController::class, 'verify'])->name('instance-settings.storage.google.verify');
     Route::delete('settings/instance/storage/google', [GoogleDriveStorageController::class, 'disconnect'])->name('instance-settings.storage.google.disconnect');
     Route::get('settings/instance/usage', [InstanceSettingsController::class, 'usage'])->name('instance-settings.usage');
     Route::get('settings/instance/usage/x', [InstanceSettingsController::class, 'xUsage'])->name('instance-settings.usage.x');

@@ -116,21 +116,29 @@ class SecurityHeaders
      */
     private function storageOrigins(): array
     {
-        if (FileStorage::diskName() !== 's3') {
-            return [];
-        }
-
         $origins = [];
 
-        foreach (['filesystems.disks.s3.url', 'filesystems.disks.s3.endpoint'] as $key) {
-            $origin = $this->originOf((string) config($key));
+        foreach (array_unique([FileStorage::diskName(), FileStorage::publishingDiskName()]) as $disk) {
+            if (! in_array($disk, ['s3', 'r2', 'public-images'], true)) {
+                continue;
+            }
 
-            if ($origin !== null) {
-                $origins[$origin] = $origin;
+            $diskOrigins = [];
+            foreach (["filesystems.disks.{$disk}.url", "filesystems.disks.{$disk}.endpoint"] as $key) {
+                $origin = $this->originOf((string) config($key));
+
+                if ($origin !== null) {
+                    $diskOrigins[$origin] = $origin;
+                    $origins[$origin] = $origin;
+                }
+            }
+
+            if ($disk === 's3' && $diskOrigins === []) {
+                return ['https:'];
             }
         }
 
-        return $origins === [] ? ['https:'] : array_values($origins);
+        return array_values($origins);
     }
 
     /**

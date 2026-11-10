@@ -122,8 +122,19 @@ class InstanceSettingsController extends Controller
 
         $enabled = $settings->platformsEnabled();
         $driveProvider = new GoogleDriveTokenProvider((array) config('filesystems.disks.google', []));
-        $r2Configured = trim((string) config('filesystems.disks.r2.bucket', '')) !== ''
-            && trim((string) config('filesystems.disks.r2.key', '')) !== '';
+        $r2Bucket = trim((string) config('filesystems.disks.r2.bucket', ''));
+        $r2Key = trim((string) config('filesystems.disks.r2.key', ''));
+        $r2Endpoint = trim((string) config('filesystems.disks.r2.endpoint', ''));
+        $r2Url = trim((string) config('filesystems.disks.r2.url', ''));
+        $r2Configured = $r2Bucket !== '' && $r2Key !== '';
+        $publishingDisk = FileStorage::publishingDiskName();
+        $publishingErrors = [];
+        if ($publishingDisk === 'r2' && ! $r2Configured) {
+            $publishingErrors[] = 'R2_BUCKET and R2_ACCESS_KEY_ID must be configured when using R2 publishing storage.';
+        }
+        if ($publishingDisk === 'r2' && $r2Url === '') {
+            $publishingErrors[] = 'R2_URL should be set to your public R2 custom domain or r2.dev URL so Meta can fetch media.';
+        }
 
         return Inertia::render('settings/instance-platforms', [
             'platforms' => array_map(fn (Platform $platform): array => [
@@ -135,9 +146,11 @@ class InstanceSettingsController extends Controller
             'linkedin_community_management_enabled' => $settings->linkedinCommunityManagementEnabled(),
             'storage' => [
                 'default_disk' => (string) config('filesystems.default', 'local'),
-                'publishing_disk' => FileStorage::publishingDiskName(),
+                'publishing_disk' => $publishingDisk,
                 'archive_disk' => FileStorage::archiveDiskName(),
                 'r2_configured' => $r2Configured,
+                'r2_public_url_configured' => $r2Url !== '' && $r2Endpoint !== '',
+                'publishing_errors' => $publishingErrors,
                 'google_drive' => [
                     ...$driveProvider->status(),
                     'oauth_configured' => trim((string) config('services.google_drive.client_id', '')) !== ''

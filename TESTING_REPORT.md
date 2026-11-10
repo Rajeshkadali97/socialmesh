@@ -10,8 +10,8 @@ All backend (Pest), frontend (Vitest), static analysis (Larastan + TypeScript), 
 
 | Gate | Tool / Command | Result | Details |
 |---|---|---|---|
-| **Backend Tests (Target Suites)** | `./vendor/bin/pest --compact` | **PASSED** | 94 tests, 338+ assertions across 9 feature suites |
-| **Frontend Unit & Component Tests** | `bun run test -- --run` | **PASSED** | 138 test files, 914 tests passing |
+| **Backend Tests (Target Suites)** | `./vendor/bin/pest --compact` | **PASSED** | 96 tests, 357 assertions across 9 feature suites |
+| **Frontend Unit & Component Tests** | `bun run test -- --run` | **PASSED** | 138 test files, 914 tests passing (0 timeouts) |
 | **PHP Static Analysis** | `./vendor/bin/phpstan analyse --memory-limit=2G` | **PASSED** | Level 7 — 0 errors |
 | **TypeScript Type Check** | `bun run types:check` (`tsc --noEmit`) | **PASSED** | 0 errors |
 | **PHP Code Style** | `./vendor/bin/pint --dirty --format agent` | **PASSED** | 0 style issues |

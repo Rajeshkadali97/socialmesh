@@ -124,11 +124,16 @@ class GoogleDriveTokenProvider
         ?string $email = null,
         ?string $rootFolderId = null,
     ): void {
+        $existing = (new self)->readStoredSetting();
         $payload = [
             'refresh_token' => Crypt::encryptString($refreshToken),
-            'email' => $email,
-            'root_folder_id' => $rootFolderId,
+            'email' => $email ?? ($existing['email'] ?? null),
+            'root_folder_id' => $rootFolderId ?? ($existing['root_folder_id'] ?? null),
             'connected_at' => now()->toIso8601String(),
+            'last_verified_at' => now()->toIso8601String(),
+            'last_error' => null,
+            'quota_used_bytes' => $existing['quota_used_bytes'] ?? null,
+            'quota_limit_bytes' => $existing['quota_limit_bytes'] ?? null,
         ];
 
         InstanceSetting::query()->updateOrCreate(
@@ -136,6 +141,43 @@ class GoogleDriveTokenProvider
             ['value' => $payload],
         );
         Cache::forget(self::CACHE_KEY);
+    }
+
+    /**
+     * Record the result of a live Google Drive health/verification probe.
+     */
+    public static function recordHealthCheck(
+        bool $healthy,
+        ?string $error = null,
+        ?string $email = null,
+        ?string $rootFolderId = null,
+        ?int $quotaUsedBytes = null,
+        ?int $quotaLimitBytes = null,
+    ): void {
+        $existing = (new self)->readStoredSetting();
+        $payload = [
+            ...$existing,
+            'last_verified_at' => $healthy ? now()->toIso8601String() : ($existing['last_verified_at'] ?? null),
+            'last_error' => $healthy ? null : $error,
+        ];
+
+        if ($email !== null && $email !== '') {
+            $payload['email'] = $email;
+        }
+        if ($rootFolderId !== null && $rootFolderId !== '') {
+            $payload['root_folder_id'] = $rootFolderId;
+        }
+        if ($quotaUsedBytes !== null) {
+            $payload['quota_used_bytes'] = $quotaUsedBytes;
+        }
+        if ($quotaLimitBytes !== null) {
+            $payload['quota_limit_bytes'] = $quotaLimitBytes;
+        }
+
+        InstanceSetting::query()->updateOrCreate(
+            ['key' => self::SETTING_KEY],
+            ['value' => $payload],
+        );
     }
 
     public static function disconnect(): void
@@ -147,7 +189,7 @@ class GoogleDriveTokenProvider
     /**
      * Summary safe for rendering in the admin UI (never includes tokens or secrets).
      *
-     * @return array{connected: bool, source: string|null, email: string|null, root_folder_id: string, archive_enabled: bool}
+     * @return array{connected: bool, source: string|null, email: string|null, root_folder_id: string, root_folder_name: string, archive_enabled: bool, connected_at: string|null, last_verified_at: string|null, last_error: string|null, quota_used_bytes: int|null, quota_limit_bytes: int|null, health: string}
      */
     public function status(): array
     {
@@ -172,12 +214,32 @@ class GoogleDriveTokenProvider
             ?? $this->diskConfig['root_folder_id']
             ?? config('services.google_drive.root_folder_id', 'root'));
 
+        $rootFolderName = trim((string) ($this->diskConfig['root_folder_name'] ?? config('filesystems.disks.google.root_folder_name', 'SocialMesh')));
+        $lastError = isset($stored['last_error']) && is_string($stored['last_error']) && $stored['last_error'] !== ''
+            ? $stored['last_error']
+            : null;
+        $lastVerifiedAt = isset($stored['last_verified_at']) && is_string($stored['last_verified_at'])
+            ? $stored['last_verified_at']
+            : null;
+
+        $health = 'disconnected';
+        if ($connected) {
+            $health = $lastError !== null ? 'error' : ($lastVerifiedAt !== null ? 'healthy' : 'configured');
+        }
+
         return [
             'connected' => $connected,
             'source' => $source,
             'email' => isset($stored['email']) && is_string($stored['email']) ? $stored['email'] : null,
             'root_folder_id' => $rootFolderId !== '' ? $rootFolderId : 'root',
+            'root_folder_name' => $rootFolderName !== '' ? $rootFolderName : 'SocialMesh',
             'archive_enabled' => config('filesystems.archive_disk') === 'google' || config('filesystems.default') === 'google',
+            'connected_at' => isset($stored['connected_at']) && is_string($stored['connected_at']) ? $stored['connected_at'] : null,
+            'last_verified_at' => $lastVerifiedAt,
+            'last_error' => $lastError,
+            'quota_used_bytes' => isset($stored['quota_used_bytes']) && is_numeric($stored['quota_used_bytes']) ? (int) $stored['quota_used_bytes'] : null,
+            'quota_limit_bytes' => isset($stored['quota_limit_bytes']) && is_numeric($stored['quota_limit_bytes']) ? (int) $stored['quota_limit_bytes'] : null,
+            'health' => $health,
         ];
     }
 
