@@ -76,6 +76,11 @@ services:
         networks:
             - socialmesh_net
         stop_grace_period: 60s
+        logging:
+            driver: json-file
+            options:
+                max-size: "10m"
+                max-file: "3"
         healthcheck:
             test: ["CMD", "healthcheck-octane"]
             start_period: 30s

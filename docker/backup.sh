@@ -14,7 +14,7 @@ set -euo pipefail
 BACKUP_DIR="${1:-./backups}"
 KEEP="${KEEP:-7}"
 STAMP="$(date +%F-%H%M)"
-COMPOSE=(docker compose -f docker-compose.production.yaml -f docker-compose.tunnel.yaml)
+COMPOSE=(docker compose -p socialmesh -fdocker-compose.production.yaml -f docker-compose.tunnel.yaml)
 
 mkdir -p "${BACKUP_DIR}"
 chmod 700 "${BACKUP_DIR}"
