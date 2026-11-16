@@ -32,7 +32,9 @@ class ImageToJpegConverter
     public function convert(PostMedia $media): ConvertedImage
     {
         $sourceDisk = Storage::disk($media->disk);
-        $targetDiskName = $media->disk === 'google' ? FileStorage::publishingDiskName() : $media->disk;
+        $targetDiskName = $media->disk === 'google'
+            ? FileStorage::publishingDiskName()
+            : ($media->disk === 'ebin_cloud' && trim((string) config('filesystems.disks.r2.bucket', '')) !== '' ? 'r2' : $media->disk);
         $targetDisk = Storage::disk($targetDiskName);
         $derivedPath = $this->derivedPath($media);
 

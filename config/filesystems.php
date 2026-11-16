@@ -113,6 +113,19 @@ return [
             'report' => true,
         ],
 
+        'ebin_cloud' => [
+            'driver' => 'ebin_cloud',
+            'url' => env('EBIN_CLOUD_URL', 'http://172.19.0.1:3010'),
+            'service_key' => env('EBIN_CLOUD_SERVICE_KEY', ''),
+            'app_id' => env('EBIN_CLOUD_APP_ID', 'socialmesh'),
+            'allow_delete' => (bool) env('EBIN_CLOUD_ALLOW_DELETE', false),
+            'cache_dir' => env('EBIN_CLOUD_CACHE_DIR', storage_path('app/cache/ebin-cloud')),
+            'cache_max_bytes' => (int) env('EBIN_CLOUD_CACHE_MAX_BYTES', 268435456),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => true,
+        ],
+
     ],
 
     /*

@@ -26,6 +26,7 @@ use App\Services\Publishing\PostStatusRollup;
 use App\Services\Publishing\PublishConnectorRegistry;
 use App\Services\Publishing\SegmentMediaResolver;
 use App\Services\Publishing\TokenManager;
+use App\Support\FileStorage;
 use App\Support\InstanceSettings;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -155,19 +156,25 @@ class PublishPostTarget implements ShouldQueue
             );
         } else {
             try {
-                $credentials = $tokens->fresh($account);
-                $connector = $registry->for($target->platform);
-                $result = $connector->publish($this->context($target, $credentials));
-
-                // The proactive token sweep can rotate a still-valid access token
-                // just after this job reads it. A resulting 401 means the request
-                // was rejected before any side effect, so it is safe to force one
-                // fresh credential exchange and retry the publish once (media that
-                // did upload resumes from stored state) before declaring the
-                // account needs attention.
-                if ($result->errorKind === ErrorKind::AuthExpired) {
-                    $credentials = $tokens->fresh($account, force: true);
+                $context = $this->context($target, []);
+                $missingMediaError = $this->verifyContextMediaAvailable($context);
+                if ($missingMediaError !== null) {
+                    $result = $missingMediaError;
+                } else {
+                    $credentials = $tokens->fresh($account);
+                    $connector = $registry->for($target->platform);
                     $result = $connector->publish($this->context($target, $credentials));
+
+                    // The proactive token sweep can rotate a still-valid access token
+                    // just after this job reads it. A resulting 401 means the request
+                    // was rejected before any side effect, so it is safe to force one
+                    // fresh credential exchange and retry the publish once (media that
+                    // did upload resumes from stored state) before declaring the
+                    // account needs attention.
+                    if ($result->errorKind === ErrorKind::AuthExpired) {
+                        $credentials = $tokens->fresh($account, force: true);
+                        $result = $connector->publish($this->context($target, $credentials));
+                    }
                 }
             } catch (TransientTokenRefreshException $e) {
                 // A transient token-endpoint failure (429/5xx/timeout) is not a bad
@@ -357,6 +364,39 @@ class PublishPostTarget implements ShouldQueue
             credentials: $credentials,
             mediaBySection: $mediaBySection,
         );
+    }
+
+    private function verifyContextMediaAvailable(PublishContext $context): ?PublishResult
+    {
+        foreach ($context->media as $media) {
+            if ($media->trashed()) {
+                return PublishResult::failure(
+                    ErrorKind::Validation,
+                    'Attached media file was deleted before publishing could complete.',
+                );
+            }
+
+            try {
+                if (! FileStorage::disk($media->disk)->exists($media->path)) {
+                    $fallbackDisk = $media->source_disk;
+                    if ($fallbackDisk !== null && $media->source_path !== null && FileStorage::disk($fallbackDisk)->exists($media->source_path)) {
+                        continue;
+                    }
+
+                    return PublishResult::failure(
+                        ErrorKind::ServerError,
+                        "Media asset '{$media->path}' is temporarily unavailable in storage ({$media->disk}).",
+                    );
+                }
+            } catch (Throwable $e) {
+                return PublishResult::failure(
+                    ErrorKind::ServerError,
+                    'Cloud media storage check failed: '.$e->getMessage(),
+                );
+            }
+        }
+
+        return null;
     }
 
     /**

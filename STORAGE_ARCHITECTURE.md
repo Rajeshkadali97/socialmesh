@@ -7,14 +7,14 @@ Social platforms such as **Meta (Instagram Business & Threads)** publish media b
 - Private Google Drive links, OAuth-gated download endpoints, or short-lived browser session URLs **cannot** be fetched reliably by Meta's crawlers.
 - Local VPS storage alone risks filling up the shared VPS disk over time as 13 client workspaces upload campaign creatives.
 
-Therefore, SocialMesh implements a **4-tier hybrid media architecture**:
+Therefore, SocialMesh implements a **4-tier Ebin Cloud-backed media architecture**:
 
 | Tier | Technology | Role |
 |---|---|---|
-| **1. Long-Term Archive & Library** | Google Drive (`google` disk) | Stores original client and campaign assets (`source_disk = 'google'`, `drive_file_id`), organized by workspace and campaign, never auto-deleted. |
-| **2. Publishing-Ready Storage** | Cloudflare R2 (`r2` / `public-images` disk) or `public` disk | Serves stable, unauthenticated public HTTPS URLs for Meta (`InstagramConnector`, `ThreadsConnector`) and fast browser thumbnails. |
-| **3. Metadata & Relationships** | SocialMesh Database (`post_media` & `post_media_placements`) | Tracks `disk`, `path`, `source_disk`, `source_path`, `drive_file_id`, `mime`, `size_bytes`, SHA-256 `checksum`, `campaign`, and `storage_error`. |
-| **4. Ephemeral Processing** | VPS Temporary Memory / `/tmp` | Performs bounded image compression/conversion (`ImageCompressor`, `ImageToJpegConverter`, max 8 MiB upload cap, pixel ceiling guard) with immediate cleanup. |
+| **1. Primary Persistent Storage & Backups** | **Ebin Cloud** (`ebin_cloud` disk -> `http://ebin-cloud-app:3000/api/v1/storage/*`, backed by 3 Google Drive accounts totaling `~10.9 TB` via `rclone`) | Primary durable storage for all uploaded images, videos, draft attachments, scheduled-post media, reusable media library assets, and SQLite database backups under namespace `Applications/SocialMesh/`. |
+| **2. Scoped Publishing Delivery** | Signed Expiring Route (`/media/{media}/signed`) or Cloudflare R2 (`r2` disk) | Keeps Ebin Cloud private by default while issuing scoped 2-hour HMAC-signed HTTPS URLs (`https://socialmesh.ebintech.in/media/{media}/signed?expires=...&signature=...`) for Meta (`InstagramConnector`, `ThreadsConnector`). |
+| **3. Metadata, Lifecycle & Relationships** | SocialMesh SQLite Database (`post_media` & `post_media_placements`) | Tracks `disk`, `path`, `original_filename`, `uploaded_by_user_id`, `drive_file_id` (Ebin Cloud UUID), SHA-256 `checksum`, `upload_status`, `processing_status`, `archived_at`, `deleted_at`, and reference counts across posts. |
+| **4. Bounded Local Cache & Ephemeral Processing** | VPS Temporary Memory & Bounded Cache (`storage/app/cache/ebin-cloud`, capped at `256 MB`) | Performs bounded read-through caching with automatic LRU eviction and ephemeral image/GIF conversion (`ImageToJpegConverter`, `GifToMp4Converter`) with immediate cleanup. |
 
 ## 2. Data Flow
 

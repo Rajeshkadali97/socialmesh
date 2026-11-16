@@ -29,7 +29,7 @@ final class FileStorage
         $disk = self::diskName();
         $driver = (string) config("filesystems.disks.{$disk}.driver");
 
-        if ($driver === 'local' || $driver === 'google') {
+        if ($driver === 'local' || $driver === 'google' || $driver === 'ebin_cloud') {
             return [
                 'url' => URL::temporarySignedRoute('uploads.stream', $expiration, ['path' => $key], absolute: false),
                 'headers' => [],
@@ -55,7 +55,7 @@ final class FileStorage
     public static function publishingDiskName(): string
     {
         $configured = (string) (config('filesystems.publishing_disk') ?: config('filesystems.public_images') ?: '');
-        if ($configured !== '' && $configured !== 'google') {
+        if ($configured !== '' && ! in_array($configured, ['google', 'ebin_cloud'], true)) {
             return $configured;
         }
 
@@ -66,7 +66,7 @@ final class FileStorage
 
         $default = self::diskName();
 
-        return $default === 'google' ? 'public' : $default;
+        return in_array($default, ['google', 'ebin_cloud'], true) ? 'public' : $default;
     }
 
     /**

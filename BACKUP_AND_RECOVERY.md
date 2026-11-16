@@ -16,11 +16,12 @@ SocialMesh state lives in three places:
 
 ## 2. Automated Nightly Backups (`docker/backup.sh`)
 
-The repository includes `./docker/backup.sh`, which performs an online, zero-downtime backup:
+The repository includes `./docker/backup.sh` and `php artisan backup:ebin-cloud`, which perform an online, zero-downtime dual-destination backup:
 1. Runs `VACUUM INTO "/tmp/backup.sqlite"` inside `socialmesh-app` so SQLite WAL state is snapshotted atomically without stopping the web server or queue worker.
-2. Compresses the database snapshot to `backups/socialmesh-sqlite-YYYY-MM-DD-HHMM.sqlite.gz`.
+2. Compresses the database snapshot locally to `backups/socialmesh-sqlite-YYYY-MM-DD-HHMM.sqlite.gz` (independent local recovery path).
 3. Archives the `socialmesh_storage` volume read-only into `backups/socialmesh-storage-YYYY-MM-DD-HHMM.tar.gz`.
-4. Rotates backups automatically, keeping the newest `KEEP=7` snapshots of each volume.
+4. Uploads a SHA-256 verified SQLite backup copy directly to **Ebin Cloud** (`Applications/SocialMesh/Backups/socialmesh-sqlite-YYYY-MM-DD-HHMM.sqlite.gz` routed to `gdrive_archive`) and runs an isolated `PRAGMA integrity_check` restore test (`php artisan backup:ebin-cloud --verify-restore`).
+5. Rotates local backups automatically (`KEEP=30` via `socialmesh-backup.service` systemd timer at `21:30 UTC`).
 
 ### Running a Manual Backup
 

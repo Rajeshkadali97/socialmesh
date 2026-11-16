@@ -22,29 +22,29 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command(DispatchDuePosts::class)->everyMinute()->withoutOverlapping();
-Schedule::command(RefreshExpiringTokens::class)->everyFifteenMinutes()->withoutOverlapping();
-Schedule::command(PruneMcpBindings::class)->hourly();
-Schedule::command(PruneAbandonedUploads::class)->hourly();
+Schedule::command(RefreshExpiringTokens::class)->cron('1,16,31,46 * * * *')->withoutOverlapping();
+Schedule::command(PruneMcpBindings::class)->cron('11 * * * *');
+Schedule::command(PruneAbandonedUploads::class)->cron('26 * * * *');
 
 if (config('metrics.enabled')) {
-    Schedule::command(CaptureMetrics::class)->everyFifteenMinutes()->withoutOverlapping();
+    Schedule::command(CaptureMetrics::class)->cron('2,17,32,47 * * * *')->withoutOverlapping();
 }
 
 if (config('engagement.enabled')) {
-    Schedule::command(DispatchDueReplyFetches::class)->everyFifteenMinutes()->withoutOverlapping();
+    Schedule::command(DispatchDueReplyFetches::class)->cron('3,18,33,48 * * * *')->withoutOverlapping();
 }
 
 if (config('messages.enabled')) {
-    Schedule::command(DispatchDueMessageFetches::class)->everyFifteenMinutes()->withoutOverlapping();
+    Schedule::command(DispatchDueMessageFetches::class)->cron('4,19,34,49 * * * *')->withoutOverlapping();
 }
 
 if (config('repost.enabled')) {
-    Schedule::command(DispatchDueReposts::class)->everyFifteenMinutes()->withoutOverlapping();
+    Schedule::command(DispatchDueReposts::class)->cron('6,21,36,51 * * * *')->withoutOverlapping();
 }
 
 if (config('sync.enabled')) {
-    Schedule::command(ReconcileSyncFanOut::class)->everyFiveMinutes()->withoutOverlapping();
-    Schedule::command(PollNativePosts::class)->everyFifteenMinutes()->withoutOverlapping();
+    Schedule::command(ReconcileSyncFanOut::class)->cron('3,8,13,18,23,28,33,38,43,48,53,58 * * * *')->withoutOverlapping();
+    Schedule::command(PollNativePosts::class)->cron('7,22,37,52 * * * *')->withoutOverlapping();
 }
 
 Schedule::command(ReconcileUsageCounters::class)->dailyAt('02:10')->withoutOverlapping();

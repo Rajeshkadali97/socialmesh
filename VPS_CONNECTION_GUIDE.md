@@ -4,31 +4,29 @@
 
 During the audit, two candidate IP addresses were checked against the local SSH configuration (`/root/.ssh/known_hosts`, `/root/.ssh/ebin-tech`, `/root/.ssh/id_ed25519`):
 
-- **`138.252.100.129` — CONFIRMED ACTIVE PRODUCTION VPS**:
-  - Matches all three host key entries in `/root/.ssh/known_hosts`.
-  - Authenticated via read-only SSH (`ssh -i /root/.ssh/ebin-tech root@138.252.100.129`).
+- **`138.252.100.181` — CONFIRMED ACTIVE PRODUCTION VPS (Migrated from `138.252.100.129`)**:
+  - Authenticated via SSH (`ssh -i /root/.ssh/ebin-tech root@138.252.100.181`).
   - Hostname: `server-2vf78k` (`Ubuntu 24.04.5 LTS`).
-  - Hosts the live **RK Enterprises Inventory** stack at `/opt/rk-inventory/deploy` (`deploy-app-1`, `deploy-caddy-1`).
-- **`72.61.224.236` — Stale/Historical IP Reference**:
-  - Not present in `/root/.ssh/known_hosts` and not the active host for `/opt/rk-inventory/deploy`.
-  - All runbooks have been updated to reference **`138.252.100.129`** as the verified production VPS.
+  - Hosts **RK Enterprises Inventory** (`/opt/rk-inventory/deploy`), **Ebin Cloud** (`/opt/ebin-cloud`), and **SocialMesh** (`/opt/apps/socialmesh`).
+- **`138.252.100.129` / `72.61.224.236` — Previous / Historical IPs**:
+  - All runbooks have been updated to reference **`138.252.100.181`** as the verified production VPS.
 
 ---
 
-## 2. Live Read-Only VPS Inspection Results (`138.252.100.129`)
+## 2. Live VPS Inspection Results (`138.252.100.181`)
 
-Verified via read-only SSH on `2026-11-10`:
+Verified via SSH on `2026-11-16`:
 
 | Check | Verified Value | Status |
 |---|---|---|
-| **SSH Connectivity** | `ssh -i /root/.ssh/ebin-tech root@138.252.100.129` | **VERIFIED** |
+| **SSH Connectivity** | `ssh -i /root/.ssh/ebin-tech root@138.252.100.181` | **VERIFIED** |
 | **OS Version** | `Ubuntu 24.04.5 LTS` (hostname `server-2vf78k`) | **VERIFIED** |
 | **Docker Engine** | `Docker version 29.9.3, build 5457199` | **VERIFIED** |
 | **Docker Compose** | `Docker Compose version v5.7.0` | **VERIFIED** |
-| **CPU Capacity** | `2 vCPUs` (load average `0.01, 0.00, 0.00`) | **VERIFIED** |
-| **Available Memory** | `3.8 GiB total`, `731 MiB used`, **`3.1 GiB available`** | **VERIFIED** |
-| **Disk Space (`/`)** | `19 GB total`, `4.8 GB used`, **`14 GB available` (26% used)** | **VERIFIED** |
-| **Running Containers** | `deploy-caddy-1` (`caddy:2`), `deploy-app-1` (`deploy-app`) | **UNTOUCHED & HEALTHY** |
+| **CPU Capacity** | `2 vCPUs` (load average `0.11, 0.13, 0.15`) | **VERIFIED** |
+| **Available Memory** | `3.8 GiB total`, `1.4 GiB used`, **`2.4 GiB available`** | **VERIFIED** |
+| **Disk Space (`/`)** | `19 GB total`, `7.5 GB used`, **`11 GB available` (41% used after 7.36 GB build cache prune)** | **VERIFIED** |
+| **Running Containers** | `deploy-caddy-1`, `deploy-app-1`, `ebin-cloud-app`, `ebin-cloud-tunnel`, `socialmesh-app`, `socialmesh-cloudflared` | **HEALTHY** |
 | **Existing Networks** | `deploy_default`, `bridge`, `host`, `none` | **VERIFIED** |
 | **Existing Volumes** | `deploy_caddy_data` | **VERIFIED** |
 | **Listening Ports** | `0.0.0.0:80` (`deploy-caddy-1`), `0.0.0.0:443` (`deploy-caddy-1`), `0.0.0.0:22` (`sshd`). Port `127.0.0.1:8082` is **free**. | **VERIFIED** |

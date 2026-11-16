@@ -5,6 +5,7 @@ use App\Http\Controllers\CommandSearchController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Gifs\GifBrowserController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Posts\PostMediaContentController;
 use App\Http\Controllers\PublicShareController;
 use App\Http\Controllers\PublicShareDecisionController;
 use App\Http\Controllers\WorkspaceMentionController;
@@ -18,6 +19,10 @@ Route::get('/share/{token}', [PublicShareController::class, 'show'])
     ->middleware([NoIndex::class, 'throttle:30,1'])
     ->name('share.show')
     ->where('token', '[A-Za-z0-9\-]+');
+
+Route::get('/media/{mediaId}/signed', [PostMediaContentController::class, 'showSigned'])
+    ->middleware([NoIndex::class, 'throttle:120,1'])
+    ->name('media.signed');
 
 Route::post('/share/{token}/decision', [PublicShareDecisionController::class, 'store'])
     ->middleware([NoIndex::class, 'throttle:20,1'])

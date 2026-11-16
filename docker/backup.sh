@@ -36,7 +36,10 @@ docker run --rm \
     -v "${ABS_DIR}:/backup" \
     alpine tar -C /source -czf "/backup/socialmesh-storage-${STAMP}.tar.gz" .
 
-# 3. Rotate: keep the newest ${KEEP} of each kind.
+# 3. Also upload a verified SQLite backup to Ebin Cloud if configured.
+"${COMPOSE[@]}" exec -T app php artisan backup:ebin-cloud --verify-restore || true
+
+# 4. Rotate: keep the newest ${KEEP} of each kind.
 for prefix in socialmesh-sqlite socialmesh-storage; do
     # shellcheck disable=SC2012
     ls -1t "${ABS_DIR}/${prefix}-"* 2>/dev/null | tail -n +"$((KEEP + 1))" | xargs -r rm -f --

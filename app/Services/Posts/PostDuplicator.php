@@ -157,6 +157,10 @@ class PostDuplicator
 
     private function copyFile(string $disk, string $path): string
     {
+        if (in_array($disk, ['ebin_cloud', 'google'], true)) {
+            return $path;
+        }
+
         $extension = pathinfo($path, PATHINFO_EXTENSION);
         $directory = pathinfo($path, PATHINFO_DIRNAME);
         $prefix = $directory !== '' && $directory !== '.' ? $directory : 'media';

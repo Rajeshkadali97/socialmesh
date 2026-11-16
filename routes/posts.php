@@ -9,6 +9,7 @@ use App\Http\Controllers\Gifs\PostGifController;
 use App\Http\Controllers\Posts\BulkScheduleController;
 use App\Http\Controllers\Posts\CalendarController;
 use App\Http\Controllers\Posts\ComposerController;
+use App\Http\Controllers\Posts\MediaLibraryController;
 use App\Http\Controllers\Posts\NextSlotController;
 use App\Http\Controllers\Posts\PostController;
 use App\Http\Controllers\Posts\PostImageEditController;
@@ -101,6 +102,16 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     // Same-origin proxy for editor fetches — the storage bucket serves display
     // URLs without CORS headers, which blocks the canvas-based image/video editors.
     Route::get('media/{media}/raw', [PostMediaContentController::class, 'show'])->name('media.raw');
+
+    Route::get('media', [MediaLibraryController::class, 'index'])->name('media.index');
+    Route::middleware('throttle:60,1')->group(function (): void {
+        Route::post('media', [MediaLibraryController::class, 'store'])->name('media.store');
+        Route::post('media/video-url', [MediaLibraryController::class, 'signVideo'])->name('media.video-url');
+        Route::post('media/video', [MediaLibraryController::class, 'storeVideo'])->name('media.video');
+        Route::post('posts/{post}/media/{media}/attach', [MediaLibraryController::class, 'attachToPost'])->name('posts.media.attach');
+        Route::post('media/{media}/archive', [MediaLibraryController::class, 'toggleArchive'])->name('media.archive');
+    });
+    Route::delete('media/{media}', [MediaLibraryController::class, 'destroy'])->name('media.destroy');
 
     Route::get('posts/{post}/shares', [PostShareController::class, 'index'])->name('posts.shares.index');
     Route::post('posts/{post}/shares', [PostShareController::class, 'store'])->name('posts.shares.store');

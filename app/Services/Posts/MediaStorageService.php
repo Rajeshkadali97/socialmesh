@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Services\Posts;
 
 use App\Models\PostMedia;
+use App\Services\Storage\EbinCloudFilesystemAdapter;
 use App\Services\Storage\GoogleDriveFilesystemAdapter;
 use App\Support\FileStorage;
 use App\Support\SafeImageFetcher;
 use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
@@ -60,15 +62,19 @@ class MediaStorageService
 
         return PostMedia::create([
             'workspace_id' => $workspaceId,
+            'uploaded_by_user_id' => Auth::id(),
             'post_id' => null,
             'disk' => $disk,
             'path' => $path,
+            'original_filename' => $file->getClientOriginalName() ?: basename($path),
             'source_disk' => $sourceDisk,
             'source_path' => $sourcePath,
             'drive_file_id' => $driveFileId,
             'checksum' => $checksum,
             'campaign' => $normalizedCampaign,
             'storage_error' => $storageError,
+            'upload_status' => 'available',
+            'processing_status' => 'ready',
             'kind' => 'image',
             'mime' => $mime,
             'size_bytes' => $size,
@@ -127,15 +133,19 @@ class MediaStorageService
 
         return PostMedia::create([
             'workspace_id' => $workspaceId,
+            'uploaded_by_user_id' => Auth::id(),
             'post_id' => null,
             'disk' => $disk,
             'path' => $path,
+            'original_filename' => basename((string) parse_url($url, PHP_URL_PATH)) ?: basename($path),
             'source_disk' => $sourceDisk,
             'source_path' => $sourcePath,
             'drive_file_id' => $driveFileId,
             'checksum' => $checksum,
             'campaign' => $normalizedCampaign,
             'storage_error' => $storageError,
+            'upload_status' => 'available',
+            'processing_status' => 'ready',
             'kind' => 'image',
             'mime' => $image['mime'],
             'size_bytes' => strlen($bytes),
@@ -182,9 +192,11 @@ class MediaStorageService
 
         return PostMedia::create([
             'workspace_id' => $workspaceId,
+            'uploaded_by_user_id' => Auth::id(),
             'post_id' => null,
             'disk' => $disk,
             'path' => $path,
+            'original_filename' => $source->getClientOriginalName() ?: ($composed->getClientOriginalName() ?: basename($path)),
             'kind' => 'image',
             'source_disk' => $disk,
             'source_path' => $sourcePath,
@@ -192,6 +204,8 @@ class MediaStorageService
             'checksum' => $checksum,
             'campaign' => $normalizedCampaign,
             'storage_error' => $storageError,
+            'upload_status' => 'available',
+            'processing_status' => 'ready',
             'edit_settings' => $settings,
             'mime' => $mime,
             'size_bytes' => $composed->getSize(),
@@ -246,7 +260,7 @@ class MediaStorageService
             'alt_text' => $altText,
         ]);
 
-        if ($oldPath !== $path && $media->disk !== 'google') {
+        if ($oldPath !== $path && ! in_array($media->disk, ['google', 'ebin_cloud'], true)) {
             FileStorage::disk($media->disk)->delete($oldPath);
         }
 
@@ -325,7 +339,12 @@ class MediaStorageService
             return [$this->resolveDriveFileId($primaryPath), null, null, null];
         }
 
-        if (FileStorage::archiveDiskName() !== 'google') {
+        if ($primaryDisk === 'ebin_cloud') {
+            return [$this->resolveEbinCloudFileId($primaryPath), null, null, null];
+        }
+
+        $archiveDisk = FileStorage::archiveDiskName();
+        if (! in_array($archiveDisk, ['google', 'ebin_cloud'], true)) {
             return [null, null, null, null];
         }
 
@@ -340,7 +359,7 @@ class MediaStorageService
             if ($archivedDuplicate instanceof PostMedia) {
                 return [
                     $archivedDuplicate->drive_file_id,
-                    'google',
+                    $archiveDisk,
                     $archivedDuplicate->source_path ?? $archivedDuplicate->path,
                     null,
                 ];
@@ -352,19 +371,46 @@ class MediaStorageService
         }
 
         try {
-            $driveStorage = FileStorage::disk('google');
-            if ($driveStorage instanceof LaravelFilesystemAdapter && $driveStorage->getAdapter() instanceof GoogleDriveFilesystemAdapter) {
-                $meta = $driveStorage->getAdapter()->getClient()->upload($primaryPath, $bytes, $mime);
+            $driveStorage = FileStorage::disk($archiveDisk);
+            if ($driveStorage instanceof LaravelFilesystemAdapter) {
+                $adapter = $driveStorage->getAdapter();
+                if ($adapter instanceof EbinCloudFilesystemAdapter) {
+                    $meta = $adapter->getClient()->upload($primaryPath, $bytes, $mime, $workspaceId);
 
-                return [$meta['id'], 'google', $primaryPath, null];
+                    return [$meta['id'], 'ebin_cloud', $primaryPath, null];
+                }
+                if ($adapter instanceof GoogleDriveFilesystemAdapter) {
+                    $meta = $adapter->getClient()->upload($primaryPath, $bytes, $mime);
+
+                    return [$meta['id'], 'google', $primaryPath, null];
+                }
             }
 
             $driveStorage->put($primaryPath, $bytes);
+            $resolvedId = $archiveDisk === 'ebin_cloud'
+                ? $this->resolveEbinCloudFileId($primaryPath)
+                : $this->resolveDriveFileId($primaryPath);
 
-            return [$this->resolveDriveFileId($primaryPath), 'google', $primaryPath, null];
+            return [$resolvedId, $archiveDisk, $primaryPath, null];
         } catch (Throwable $e) {
             return [null, null, null, $e->getMessage()];
         }
+    }
+
+    private function resolveEbinCloudFileId(string $path): ?string
+    {
+        try {
+            $storage = FileStorage::disk('ebin_cloud');
+            if ($storage instanceof LaravelFilesystemAdapter && $storage->getAdapter() instanceof EbinCloudFilesystemAdapter) {
+                $meta = $storage->getAdapter()->getClient()->metadata($path);
+
+                return $meta['id'] ?? null;
+            }
+        } catch (Throwable) {
+            return null;
+        }
+
+        return null;
     }
 
     private function resolveDriveFileId(string $path): ?string

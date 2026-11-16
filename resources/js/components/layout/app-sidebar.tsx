@@ -12,6 +12,7 @@ import {
     CalendarDays,
     ChartColumn,
     CreditCard,
+    Image,
     Inbox,
     KeyRound,
     LayoutGrid,
@@ -90,6 +91,7 @@ const instanceSettingsIcons: Record<InstanceSettingsNavKey, IconComponent> = {
 const postsNavItems: NavItem[] = [
     { title: 'Clients', href: clientsRoute(), icon: LayoutGrid },
     { title: 'Posts', href: postsRoute(), icon: Inbox },
+    { title: 'Media', href: '/media', icon: Image },
     { title: 'Calendar', href: calendarRoute(), icon: CalendarDays },
     {
         title: 'Queue',

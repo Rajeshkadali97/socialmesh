@@ -6,8 +6,11 @@ namespace App\Http\Controllers\Concerns;
 
 use App\Enums\Platform;
 use App\Models\PostMedia;
+use App\Services\Storage\EbinCloudFilesystemAdapter;
+use App\Services\Storage\GoogleDriveFilesystemAdapter;
 use App\Support\FileStorage;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -84,11 +87,30 @@ trait StoresPresignedVideo
         $final = $directory.'/'.Str::uuid().'.mp4';
         Storage::disk($disk)->move($key, $final);
 
+        $driveFileId = null;
+        $checksum = null;
+        $storageAdapter = Storage::disk($disk);
+        $inner = $storageAdapter->getAdapter();
+        if ($inner instanceof EbinCloudFilesystemAdapter) {
+            $meta = $inner->getClient()->metadata($final);
+            $driveFileId = $meta['id'] ?? null;
+            $checksum = $meta['sha256'] ?? null;
+        } elseif ($inner instanceof GoogleDriveFilesystemAdapter) {
+            $meta = $inner->getClient()->metadata($final);
+            $driveFileId = $meta['id'] ?? null;
+        }
+
         $media = PostMedia::create([
             'workspace_id' => $workspaceId,
+            'uploaded_by_user_id' => Auth::id(),
             'post_id' => null,
             'disk' => $disk,
             'path' => $final,
+            'original_filename' => basename($final),
+            'drive_file_id' => $driveFileId,
+            'checksum' => $checksum,
+            'upload_status' => 'available',
+            'processing_status' => 'ready',
             'campaign' => $campaign !== null && trim($campaign) !== '' ? mb_substr(trim($campaign), 0, 120) : null,
             'kind' => 'video',
             'mime' => 'video/mp4',

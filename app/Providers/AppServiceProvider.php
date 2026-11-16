@@ -14,6 +14,8 @@ use App\Models\Workspace;
 use App\Services\Auth\Socialite\ThreadsProvider;
 use App\Services\Media\ImageCompressor;
 use App\Services\Media\ImageToJpegConverter;
+use App\Services\Storage\EbinCloudClient;
+use App\Services\Storage\EbinCloudFilesystemAdapter;
 use App\Services\Storage\GoogleDriveClient;
 use App\Services\Storage\GoogleDriveFilesystemAdapter;
 use App\Services\Storage\GoogleDriveTokenProvider;
@@ -94,6 +96,24 @@ class AppServiceProvider extends ServiceProvider
                 rootFolderName: (string) ($config['root_folder_name'] ?? 'SocialMesh'),
             );
             $adapter = new GoogleDriveFilesystemAdapter($client);
+
+            return new LaravelFilesystemAdapter(
+                new Flysystem($adapter, $config),
+                $adapter,
+                $config,
+            );
+        });
+
+        Storage::extend('ebin_cloud', function ($app, array $config): LaravelFilesystemAdapter {
+            $client = new EbinCloudClient(
+                baseUrl: (string) ($config['url'] ?? 'http://172.19.0.1:3010'),
+                serviceKey: (string) ($config['service_key'] ?? ''),
+                appId: (string) ($config['app_id'] ?? 'socialmesh'),
+                allowDelete: (bool) ($config['allow_delete'] ?? false),
+                localCacheDir: isset($config['cache_dir']) && is_string($config['cache_dir']) ? $config['cache_dir'] : null,
+                localCacheMaxBytes: isset($config['cache_max_bytes']) && is_numeric($config['cache_max_bytes']) ? (int) $config['cache_max_bytes'] : 268_435_456,
+            );
+            $adapter = new EbinCloudFilesystemAdapter($client);
 
             return new LaravelFilesystemAdapter(
                 new Flysystem($adapter, $config),

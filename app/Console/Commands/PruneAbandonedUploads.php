@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\PostMedia;
+use App\Services\Storage\EbinCloudFilesystemAdapter;
 use App\Support\FileStorage;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -64,6 +66,19 @@ class PruneAbandonedUploads extends Command
 
         if ($orphans->isNotEmpty()) {
             Log::info('Pruned '.$orphans->count().' orphan media record(s).');
+        }
+
+        // Enforce bounded local read-through cache for Ebin Cloud media (default 256 MB)
+        try {
+            $ebinDisk = FileStorage::disk('ebin_cloud');
+            if ($ebinDisk instanceof FilesystemAdapter && $ebinDisk->getAdapter() instanceof EbinCloudFilesystemAdapter) {
+                $evicted = $ebinDisk->getAdapter()->getClient()->enforceLocalCacheBudget();
+                if ($evicted > 0) {
+                    Log::info("Evicted {$evicted} local Ebin Cloud cache file(s).");
+                }
+            }
+        } catch (Throwable) {
+            // ignore if ebin_cloud disk is not configured
         }
 
         return self::SUCCESS;

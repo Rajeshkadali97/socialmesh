@@ -10,6 +10,7 @@ use App\Models\PostMedia;
 use App\Models\PostMediaPlacement;
 use App\Models\PostTarget;
 use App\Services\Publishing\SegmentMediaResolver;
+use App\Support\FileStorage;
 use Illuminate\Support\Collection;
 
 class PublishPrecheck
@@ -77,6 +78,8 @@ class PublishPrecheck
         $messages = array_map(static fn (string $issue): string => match ($issue) {
             'empty' => 'Add text or media before publishing.',
             'media_required' => "{$label} needs at least one image or video.",
+            'media_missing' => 'One or more attached media files are missing from cloud storage. Re-upload or replace the attachment.',
+            'media_unavailable' => 'Cloud media storage is temporarily unavailable. Please retry shortly.',
             'section_too_long' => "A section is over {$label}'s length limit.",
             'too_many_sections' => "Too many thread sections for {$label}.",
             'too_many_media' => "Too many media items for {$label}.",
@@ -121,6 +124,22 @@ class PublishPrecheck
 
         if ($media->count() === 0 && $platform->requiresMedia()) {
             $issues[] = 'media_required';
+        }
+
+        foreach ($media as $item) {
+            if ($item->trashed()) {
+                $issues[] = 'media_missing';
+
+                continue;
+            }
+
+            try {
+                if (! FileStorage::disk($item->disk)->exists($item->path)) {
+                    $issues[] = 'media_missing';
+                }
+            } catch (\Throwable) {
+                $issues[] = 'media_unavailable';
+            }
         }
 
         foreach ($this->mediaIssues($target, $platform, $media) as $issue) {

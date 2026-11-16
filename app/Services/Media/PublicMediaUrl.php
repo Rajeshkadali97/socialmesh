@@ -42,6 +42,31 @@ class PublicMediaUrl
             $converted = $this->converter->convert($media);
             $disk = $converted->disk;
             $path = $converted->path;
+            if ($disk === 'ebin_cloud') {
+                return URL::temporarySignedRoute('media.signed', now()->addHours(2), [
+                    'mediaId' => $media->id,
+                    'variant' => 'derived_jpg',
+                ]);
+            }
+        } elseif ($disk === 'ebin_cloud') {
+            $r2Bucket = trim((string) config('filesystems.disks.r2.bucket', ''));
+            if ($r2Bucket !== '') {
+                $stagedPath = 'published/'.ltrim($path, '/');
+                $targetStorage = FileStorage::disk('r2');
+                if (! $targetStorage->exists($stagedPath)) {
+                    $bytes = FileStorage::disk('ebin_cloud')->get($path);
+                    if ($bytes === null || $bytes === '') {
+                        throw new ImageConversionFailed('Could not stage media from Ebin Cloud for publishing.');
+                    }
+                    $targetStorage->put($stagedPath, $bytes);
+                }
+
+                return $this->absolute(FileStorage::url($stagedPath, 'r2'));
+            }
+
+            return URL::temporarySignedRoute('media.signed', now()->addHours(2), [
+                'mediaId' => $media->id,
+            ]);
         } elseif ($disk === 'google') {
             $publishingDisk = FileStorage::publishingDiskName();
             if ($publishingDisk !== 'google') {

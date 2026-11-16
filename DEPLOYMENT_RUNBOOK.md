@@ -1,11 +1,11 @@
 # SocialMesh — Shared VPS Deployment Runbook
 
 > [!CAUTION]
-> **CRITICAL SHARED VPS PROTECTION RULE (`138.252.100.129`)**
-> This VPS (`server-2vf78k`, Ubuntu 24.04.5 LTS) hosts the live production application **RK Enterprises Inventory** at `/opt/rk-inventory/deploy` (`deploy-app-1`, `deploy-caddy-1`).
+> **CRITICAL SHARED VPS PROTECTION RULE (`138.252.100.181`)**
+> This VPS (`server-2vf78k`, Ubuntu 24.04.5 LTS) hosts the live production applications **RK Enterprises Inventory** at `/opt/rk-inventory/deploy` (`deploy-app-1`, `deploy-caddy-1`) and **Ebin Cloud** at `/opt/ebin-cloud` (`ebin-cloud-app`, `ebin-cloud-tunnel`).
 > - **NEVER** modify `/opt/rk-inventory/deploy` or any files inside `/opt/rk-inventory`.
 > - **NEVER** stop, restart, rebuild, or inspect secrets of `deploy-app-1` or `deploy-caddy-1`.
-> - **NEVER** run `docker system prune`, `docker volume prune`, or `docker network prune`.
+> - **NEVER** run `docker system prune -a`, `docker volume prune`, or `docker network prune`.
 > - **NEVER** bind host ports `80` or `443` (already owned by `deploy-caddy-1`).
 
 ---
@@ -30,7 +30,7 @@ SocialMesh runs in complete isolation on the shared VPS:
 
 ## 2. Pre-Deployment Verification Checklist (Read-Only on VPS)
 
-Before deploying SocialMesh, SSH into `138.252.100.129` (`ssh -i /root/.ssh/ebin-tech root@138.252.100.129`) and run these read-only checks to verify VPS health and confirm RK Enterprises Inventory is healthy:
+Before deploying SocialMesh, SSH into `138.252.100.181` (`ssh -i /root/.ssh/ebin-tech root@138.252.100.181`) and run these read-only checks to verify VPS health and confirm RK Enterprises Inventory and Ebin Cloud are healthy:
 
 ```bash
 # 1. Verify running containers (confirm deploy-app-1 and deploy-caddy-1 are Up)
