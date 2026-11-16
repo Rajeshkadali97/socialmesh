@@ -31,6 +31,9 @@ services:
         command: tunnel --no-autoupdate run
         environment:
             TUNNEL_TOKEN: "${TUNNEL_TOKEN:-}"
+            # QUIC (UDP 7844) proved unstable on the VPS network after the IP
+            # migration; http2 uses TCP 7844. Override in .env to go back to quic.
+            TUNNEL_TRANSPORT_PROTOCOL: "${TUNNEL_TRANSPORT_PROTOCOL:-http2}"
         networks:
             - socialmesh_net
         logging:
